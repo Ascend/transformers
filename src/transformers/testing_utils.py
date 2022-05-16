@@ -59,6 +59,7 @@ from .file_utils import (
     is_torch_tpu_available,
     is_torchaudio_available,
     is_vision_available,
+    is_torch_ascend_available,
 )
 from .integrations import is_optuna_available, is_ray_available, is_sigopt_available, is_wandb_available
 
@@ -463,6 +464,24 @@ def require_torch_multi_gpu(test_case):
         return test_case
 
 
+def require_torch_multi_npu(test_case):
+    """
+    Decorator marking a test that requires a multi-NPU setup (in PyTorch). These tests are skipped on a machine without
+    multiple NPUs.
+
+    To run *only* the multi_npu tests, assuming all test names contain multi_npu: $ pytest -sv ./tests -k "multi_npu"
+    """
+    if not is_torch_available():
+        return unittest.skip("test requires PyTorch")(test_case)
+
+    import torch
+
+    if torch.npu.device_count() < 2:
+        return unittest.skip("test requires multiple NPUs")(test_case)
+    else:
+        return test_case
+
+
 def require_torch_non_multi_gpu(test_case):
     """
     Decorator marking a test that requires 0 or 1 GPU setup (in PyTorch).
@@ -474,6 +493,21 @@ def require_torch_non_multi_gpu(test_case):
 
     if torch.cuda.device_count() > 1:
         return unittest.skip("test requires 0 or 1 GPU")(test_case)
+    else:
+        return test_case
+
+
+def require_torch_non_multi_npu(test_case):
+    """
+    Decorator marking a test that requires 0 or 1 NPU setup (in PyTorch).
+    """
+    if not is_torch_available():
+        return unittest.skip("test requires PyTorch")(test_case)
+
+    import torch
+
+    if torch.npu.device_count() > 1:
+        return unittest.skip("test requires 0 or 1 NPU")(test_case)
     else:
         return test_case
 
@@ -493,6 +527,21 @@ def require_torch_up_to_2_gpus(test_case):
         return test_case
 
 
+def require_torch_up_to_2_npus(test_case):
+    """
+    Decorator marking a test that requires 0 or 1 or 2 NPU setup (in PyTorch).
+    """
+    if not is_torch_available():
+        return unittest.skip("test requires PyTorch")(test_case)
+
+    import torch
+
+    if torch.npu.device_count() > 2:
+        return unittest.skip("test requires 0 or 1 or 2 NPUs")(test_case)
+    else:
+        return test_case
+
+
 def require_torch_tpu(test_case):
     """
     Decorator marking a test that requires a TPU (in PyTorch).
@@ -507,7 +556,12 @@ if is_torch_available():
     # Set env var CUDA_VISIBLE_DEVICES="" to force cpu-mode
     import torch
 
-    torch_device = "cuda" if torch.cuda.is_available() else "cpu"
+    if is_torch_ascend_available():
+        torch_device = "npu"
+    elif torch.cuda.is_available():
+        torch_device = "cuda"
+    else:
+        torch_device = "cpu"
 else:
     torch_device = None
 
@@ -526,6 +580,14 @@ def require_torch_gpu(test_case):
     """Decorator marking a test that requires CUDA and PyTorch."""
     if torch_device != "cuda":
         return unittest.skip("test requires CUDA")(test_case)
+    else:
+        return test_case
+
+
+def require_torch_gpu(test_case):
+    """Decorator marking a test that requires NPU and PyTorch."""
+    if torch_device != "npu":
+        return unittest.skip("test requires npu")(test_case)
     else:
         return test_case
 
@@ -683,6 +745,18 @@ def get_gpu_count():
         import jax
 
         return jax.device_count()
+    else:
+        return 0
+
+
+def get_npu_count():
+    """
+    Return the number of available npus (only supports torch)
+    """
+    if is_torch_available():
+        import torch
+
+        return torch.npu.device_count()
     else:
         return 0
 
