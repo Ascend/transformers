@@ -584,7 +584,7 @@ def require_torch_gpu(test_case):
         return test_case
 
 
-def require_torch_gpu(test_case):
+def require_torch_npu(test_case):
     """Decorator marking a test that requires NPU and PyTorch."""
     if torch_device != "npu":
         return unittest.skip("test requires npu")(test_case)
