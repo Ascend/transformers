@@ -1080,7 +1080,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
 
         # If we save using the predefined names, we can load using `from_pretrained`
         output_model_file = os.path.join(save_directory, WEIGHTS_NAME)
-        save_function(state_dict, output_model_file)
+        torch.save(state_dict, output_model_file)
 
         logger.info(f"Model weights saved in {output_model_file}")
 

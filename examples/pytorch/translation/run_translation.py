@@ -60,6 +60,8 @@ logger = logging.getLogger(__name__)
 # A list of all multilingual tokenizer which require src_lang and tgt_lang attributes.
 MULTILINGUAL_TOKENIZERS = [MBartTokenizer, MBartTokenizerFast, MBart50Tokenizer, MBart50TokenizerFast, M2M100Tokenizer]
 
+os.environ['TOKENIZERS_PARALLELISM'] = "false"
+os.environ['WANDB_DISABLED'] = "true"
 
 @dataclass
 class ModelArguments:

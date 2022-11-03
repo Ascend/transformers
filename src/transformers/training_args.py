@@ -575,6 +575,12 @@ class TrainingArguments:
             "help": "whether use combine_grad option for amp."
         },
     )
+    use_combine_ddp: bool = field(
+        default=None,
+        metadata={
+            "help": "whether use combine_ddp option for amp."
+        },
+    )
     half_precision_backend: str = field(
         default="auto",
         metadata={"help": "The backend to be used for half precision.", "choices": ["auto", "amp", "apex"]},
