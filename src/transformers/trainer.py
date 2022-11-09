@@ -147,6 +147,7 @@ if is_in_notebook():
 
 if is_apex_available():
     from apex import amp
+    amp.register_half_function(torch, 'npu_linear')
 
 if version.parse(torch.__version__) >= version.parse("1.6"):
     _is_torch_generator_available = True
@@ -1105,6 +1106,7 @@ class Trainer:
                     model,
                     device_ids=[self.args.local_rank] if self.args._n_gpu != 0 else None,
                     output_device=self.args.local_rank if self.args._n_gpu != 0 else None,
+                    broadcast_buffers=False,
                     **kwargs,
                 )
 
@@ -1469,7 +1471,19 @@ class Trainer:
                             # Some models (like FullyShardedDDP) have a specific way to do gradient clipping
                             model.clip_grad_norm_(args.max_grad_norm)
                         elif self.args.use_combine_grad:
-                            self.optimizer.clip_optimizer_grad_norm_fused(args.max_grad_norm)
+                            clip_coef_clamped = 1
+                            total_norm = 0
+                            for combined_grad in self.optimizer.get_optimizer_combined_grads():
+                                if combined_grad is None:
+                                    continue
+                                total_norm = total_norm + combined_grad.norm(2).pow(2)
+                            if isinstance(total_norm, torch.Tensor):
+                                clip_coef = args.max_grad_norm / (total_norm.sqrt() + 1e-8)
+                                clip_coef_clamped = torch.clamp(clip_coef, max=1.0)
+                            for combined_grad in self.optimizer.get_optimizer_combined_grads():
+                                if combined_grad is None:
+                                    continue
+                                combined_grad.mul_(clip_coef_clamped)
                         else:
                             # Revert to normal clipping otherwise, handling Apex or full precision
                             nn.utils.clip_grad_norm_(
