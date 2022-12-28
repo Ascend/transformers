@@ -1,1 +1,14 @@
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Environments
+venv/
+
+# Pycharm
 .idea/
+
+# vscode
+.vs/
+.vscode/

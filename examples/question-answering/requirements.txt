@@ -1,0 +1,2 @@
+accelerate
+datasets >= 1.8.0
