@@ -5,20 +5,9 @@
 > Huawei Ascend NPU is tailored for deep neural network computing. Thanks to the high-performance 3D cube matrix computing units, the Ascend NPU can achieve significant computing power and efficiency. Each matrix computing unit can handle 4096 multiplication and addition calculations within a single instruction cycle.
 
 ## Install
-To install the latest release of this package:
-```text
-pip install optimum-ascend
-```
-Optimum Ascend is fast-moving project, and you may want to install it from source:
-```text
-pip install git+https://github.com/huggingface/optimum-ascend.git
-```
 
-### Installing in developer mode
-If you are working on the `optimum-ascend` code then you should use an editable install.
 ```text
-git clone https://github.com/huggingface/optimum-ascend
-cd optimum-ascend
+git clone https://gitee.com/ascend/transformers.git -b optimum && cd transformers
 pip install -e .
 ```
 
@@ -109,10 +98,8 @@ trainer = Trainer(
 )
 ```
 
-for more information, check our [documentation]().
-
 ## Supported Models
 The following model architectures and tasks are supported by 🤗 Optimum Ascend.
 
 ## NPU Setup
-please refer to Ascend NPU's offical [installation guild]().
+please refer to Ascend NPU's offical [installation guild](https://gitee.com/ascend/pytorch/blob/master/README.zh.md).
