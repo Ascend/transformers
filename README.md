@@ -99,7 +99,16 @@ trainer = Trainer(
 ```
 
 ## Supported Models
-The following model architectures and tasks are supported by 🤗 Optimum Ascend.
+The following model architectures, tasks and device have been validated for 🤗 Optimum Ascend.
+
+| Architecture | Single Card | Multi Card | Tasks                                                                 |
+|--------------|-------------|------------|-----------------------------------------------------------------------|
+| BERT         | ✔️          | ✔️         | <li>[text classification](https://gitee.com/ji-huazhong/transformers_test/blob/master/examples/text-classification/test/train_bert_base_cased_full_8p.sh)</li><br><li>[token classification](https://gitee.com/ji-huazhong/transformers_test/blob/master/examples/token-classification/test/train_bert_base_NER_full_8p.sh)</li> |
+| ALBERT       | ✔️          | ✔️         | <li>[question answering](https://gitee.com/ji-huazhong/transformers_test/blob/master/examples/question-answering/test/train_albert_base_v2_full_8p.sh)</li>                                       |                     |
+| RoBERTa      | ✔️          | ✔️         | <li>[language modeling](https://gitee.com/ji-huazhong/transformers_test/blob/master/examples/language-modeling/test/train_roberta_base_full_8p.sh)</li>                                        |
+| T5           | ✔️          | ✔️         | <li>[translation](https://gitee.com/ji-huazhong/transformers_test/blob/master/examples/translation/test/train_t5_small_full_8p.sh)</li>                                              |
+| GPT-2        | ✔️          | ✔️         | <li>[language modeling](https://gitee.com/ji-huazhong/transformers_test/blob/master/examples/language-modeling/test/train_gpt2_full_8p.sh)</li>                                        |
+
 
 ## NPU Setup
 please refer to Ascend NPU's offical [installation guild](https://gitee.com/ascend/pytorch/blob/master/README.zh.md).
