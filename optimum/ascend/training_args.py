@@ -1,5 +1,3 @@
-#  Copyright ...
-
 import datetime
 from dataclasses import asdict, dataclass, field
 from typing import Optional
@@ -42,6 +40,8 @@ class NPUTrainingArguments(TrainingArguments):
     use_ascend: Optional[bool] = field(
         default=False, metadata={"help": "Whether to use Ascend's NPU for training the model"}
     )
+
+    device_id: int = field (default=0, metadata={"help": "Specify which card to use during single card training"})
 
     npu_fp16: bool = field(
         default=False,
@@ -160,7 +160,28 @@ class NPUTrainingArguments(TrainingArguments):
                 "In order to use Torch DDP, launch your script with `python -m torch.distributed.launch`"
             )
         device = torch.device("cpu")
-        if self.no_cuda:
+        if self.use_ascend:
+            logger.info("Ascend is enabled.")
+            if self.local_rank == -1:
+                # if n_gpu > 1 we'll use nn.DataParallel.
+                # If you only want use a specific subset of GPUs use `NPU_VISIBLE_DEVICES=0`
+                # Explicitly set NPU to the first (index 0)  NPU device, otherwise `set_device` will
+                # trigger an error that a device index is missing. Index 0 takes into account the
+                # NPUs available in the environment, so `NPU_VISIBLE_DEVICES=1,2` with `npu:0`
+                # will use the first NPU in the env, i.e. NPU#1
+
+                device = torch.device("npu:{}".format(self.device_id) if torch.npu.is_available() else "cpu")
+                self._n_gpu = 1  # TODO: NPU_VISIBLE_DEVICES is not equal to CUDA_VISIBLE_DEVICES
+            else:
+                # Here, we'll use torch.distributed.
+                # Initializes the distributed backend which will take care of synchronizing nodes/NPUs
+                if not torch.distributed.is_initialized():
+                    torch.distributed.init_process_group(backend="hccl", timeout=datetime.timedelta(
+                        self.distributed_process_group_timeout))
+                device = torch.device("npu", self.local_rank)
+                self._n_gpu = 1
+                logger.info("Enabled distributed run.")
+        else:
             device = torch.device("cpu")
             self._n_gpu = 0
             self.local_rank = get_int_from_env(
@@ -221,27 +242,7 @@ class NPUTrainingArguments(TrainingArguments):
                 torch.distributed.init_process_group(
                     backend=self.xpu_backend, rank=rank, world_size=size, timeout=self.ddp_timeout_delta
                 )
-        elif self.use_ascend:
-            logger.info("Ascend is enabled.")
-            if self.local_rank == -1:
-                # if n_gpu > 1 we'll use nn.DataParallel.
-                # If you only want use a specific subset of GPUs use `NPU_VISIBLE_DEVICES=0`
-                # Explicitly set NPU to the first (index 0)  NPU device, otherwise `set_device` will
-                # trigger an error that a device index is missing. Index 0 takes into account the
-                # NPUs available in the environment, so `NPU_VISIBLE_DEVICES=1,2` with `npu:0`
-                # will use the first NPU in the env, i.e. NPU#1
 
-                device = torch.device("npu:0" if torch.npu.is_available() else "cpu")
-                self._n_gpu = torch.cuda.device_count()  # TODO: NPU_VISIBLE_DEVICES is not equal to CUDA_VISIBLE_DEVICES
-            else:
-                # Here, we'll use torch.distributed.
-                # Initializes the distributed backend which will take care of synchronizing nodes/NPUs
-                if not torch.distributed.is_initialized():
-                    torch.distributed.init_process_group(backend="hccl", timeout=datetime.timedelta(
-                        self.distributed_process_group_timeout))
-                device = torch.device("npu", self.local_rank)
-                self._n_gpu = 1
-                logger.info("Enabled distributed run.")
         if device.type == "npu":
             torch.npu.set_device(device)
 
