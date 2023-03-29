@@ -1,53 +1,50 @@
-# Text Classification Examples
-## GLUE tasks
-Based on the script `run_glue.py`.
+# Text classification
 
-Fine-tuning the library models for sequence classification on the GLUE benchmark: [General Language Understanding Evaluation](https://gluebenchmark.com). This script can fine-tune any of the models on the [hub](https://huggingface.co/models) and can also be used for a dataset hosted on our [hub](https://huggingface.co/datasets) or your own data in a csv or a JSON file (the script might need some tweaks in that case, refer to the comments inside for help).
+## GLUE任务
 
-GLUE is made up of a total of 9 different tasks where the task name can be cola, sst2, mrpc, stsb, qqp, mnli, qnli, rte or wnli.
-
-## Fine-tuning BERT on SST2
-
-### Single-card Training
-The following example fine-tunes BERT Large on the sst2 dataset hosted on the [hub](https://huggingface.co/datasets):
+ `run_glue.py` 脚本用于训练sequence classification任务，GLUE由9个不同的任务组成。以下是在其中一个上运行的脚本：
 
 ```bash
+export TASK_NAME=sst2
+
 python run_glue.py \
-  --model_name_or_path bert-large-cased \
-  --task_name sst2 \
+  --model_name_or_path bert-base-cased \
+  --task_name $TASK_NAME \
   --do_train \
   --do_eval \
-  --per_device_train_batch_size 32 \
-  --learning_rate 3e-5 \
-  --num_train_epochs 3 \
   --max_seq_length 128 \
-  --output_dir ./output/sst2/ \
+  --per_device_train_batch_size 32 \
+  --learning_rate 2e-5 \
+  --num_train_epochs 3 \
   --use_ascend \
-  --use_combine_grad \
   --npu_fp16 \
   --npu_fp16_opt_level O2 \
-```
-
-> If your model classification head dimensions do not fit the number of labels in the dataset, you can specify `--ignore_mismatched_sizes` to adapt it.
-
-### Multi-card Training
-Here is how you would fine-tune the BERT large model (with whole word masking) on the text classification SST2 task using the `run_glue` script, with 8 NPUs:
-```bash
-python run_glue.py \
-  --model_name_or_path bert-large-cased \
-  --task_name sst2 \
-  --do_train \
-  --do_eval \
-  --per_device_train_batch_size 32 \
-  --learning_rate 3e-5 \
-  --num_train_epochs 3 \
-  --max_seq_length 128 \
-  --output_dir ./output/sst2/ \
-  --use_ascend \
   --use_combine_grad \
-  --npu_fp16 \
-  --npu_fp16_opt_level O2 \
+  --output_dir /tmp/$TASK_NAME/
 ```
+其中`task_name`可以是 `cola`、`sst2`、`mrpc`、`stsb`、`qqp`、`mnli`、`qnli`、`rte`、`wnli`。
 
-> If your model classification head dimensions do not fit the number of labels in the dataset, you can specify `--ignore_mismatched_sizes` to adapt it.
+> 如果您的模型的classification head维度和数据集labels数不匹配，您可以通过指定`--ignore_mismatched_sizes`忽略不匹配项。
 
+## 训练结果
+**[bert-base-cased](https://huggingface.co/bert-base-cased)在sst2上训练结果展示表**
+
+| bert-base-cased | Acc    | FPS      | AMP_Type | Epochs |
+|-----------------|--------|----------|----------|--------|
+| 1p-V竞品          | 91.44% | 303.068  | O2       | 3      |
+| 8p-V竞品          | 91.63% | 1483.905 | O2       | 3      |
+| 1p-NPU(910ProB) | 92.48% | 305.27   | O2       | 3      |
+| 8p-NPU(910Prob) | 91.4%  | 1672.478 | O2       | 3      |
+
+**[bert-large-uncased](https://huggingface.co/bert-base-uncased)在sst2上训练结果展示表**
+
+| bert-large-uncased | Acc    | FPS     | AMP_Type | Epochs |
+|--------------------|--------|---------|----------|--------|
+| 1p-V竞品             | 93.17% | 103.237 | O2       | 3      |
+| 8p-V竞品             | 92.43% | -       | O2       | 3      |
+| 1p-NPU(910ProB)    | 93.29% | 117.2   | O2       | 3      |
+| 8p-NPU(910Prob)    | 93.12% | 694.745 | O2       | 3      |
+
+## 版本说明
+### 变更
+- 2023.03.05: 首次发布

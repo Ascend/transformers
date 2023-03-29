@@ -1,42 +1,13 @@
-## Translation Example
-`run_translation.py` is a lightweight examples of how to download and preprocess a dataset from the [🤗 Datasets](https://github.com/huggingface/datasets) library or use your own files (jsonlines or csv), then fine-tune one of the architectures above on it.
+# Translation
 
-For custom datasets in `jsonlines` format please see: https://huggingface.co/docs/datasets/loading_datasets.html#json-files
-and you also will find examples of these below.
+本项目展示如何在翻译任务上微调和评估transformers模型。
 
-## Single-card Training
+## 微调T5
 
-Here is an example of a translation fine-tuning with a T5 model. T5 models `t5-small`, `t5-base`, `t5-large`, `t5-3b` and `t5-11b` must use an additional argument: `--source_prefix "translate {source_lang} to {target_lang}".` For instance:
+下面展示如何在wmt16上微调T5-small:
 
 ```bash
-python run_translation.py \
-    --model_name_or_path Helsinki-NLP/opus-mt-en-ro \
-    --do_train \
-    --do_eval \
-    --source_lang en \
-    --target_lang ro \
-    --dataset_name wmt16 \
-    --dataset_config_name ro-en \
-    --output_dir /tmp/tst-translation \
-    --per_device_train_batch_size=4 \
-    --per_device_eval_batch_size=4 \
-    --overwrite_output_dir \
-    --predict_with_generate \
-    --use_ascend \
-    --use_combine_grad \
-    --npu_fp16 \
-    --npu_fp16_opt_level O2
-```
-
-If you get a terrible BLEU score, make sure that you didn't forget to use the `--source_prefix` argument.
-
-For the aforementioned group of T5 models it's important to remember that if you switch to a different language pair, make sure to adjust the source and target values in all 3 language-specific command line argument: `--source_lang`, `--target_lang` and `--source_prefix`.
-
-And here is how you would use the translation finetuning on your own files, after adjusting the
-values for the arguments `--train_file`, `--validation_file` to match your setup:
-
-```bash
-python run_translation.py \
+python examples/pytorch/translation/run_translation.py \
     --model_name_or_path t5-small \
     --do_train \
     --do_eval \
@@ -45,67 +16,29 @@ python run_translation.py \
     --source_prefix "translate English to Romanian: " \
     --dataset_name wmt16 \
     --dataset_config_name ro-en \
-    --train_file path_to_jsonlines_file \
-    --validation_file path_to_jsonlines_file \
     --output_dir /tmp/tst-translation \
     --per_device_train_batch_size=4 \
     --per_device_eval_batch_size=4 \
     --overwrite_output_dir \
-    --predict_with_generate \
-    --use_ascend \
+    --fp16 \
+    --fp16_opt_level O2 \
     --use_combine_grad \
-    --npu_fp16 \
-    --npu_fp16_opt_level O2
+    --predict_with_generate
 ```
+更多用法请参考官方[示例](https://github.com/huggingface/transformers/examples/pytorch/translation)。
 
-The task of translation supports only custom JSONLINES files, with each line being a dictionary with a key `"translation"` and its value another dictionary whose keys is the language pair. For example:
+## 训练结果
+**[t5-small](https://huggingface.co/t5-small)在wmt16上训练结果展示表**
 
-```json
-{ "translation": { "en": "Others have dismissed him as a joke.", "ro": "Alții l-au numit o glumă." } }
-{ "translation": { "en": "And some are holding out for an implosion.", "ro": "Iar alții așteaptă implozia." } }
-```
-Here the languages are Romanian (`ro`) and English (`en`).
+| t5-small        | BLEU    | FPS     | AMP_Type | Epochs |
+|-----------------|---------|---------|----------|--------|
+| 1p-V竞品          | 26.4444 | 61.443  | O2       | 3      |
+| 8p-V竞品          | 26.3522 | 288.524 | O2       | 3      |
+| 1p-NPU(910ProB) | 26.3213 | 33.003  | O2       | 3      |
+| 8p-NPU(910Prob) | 26.2331 | 214.161 | O2       | 3      |
 
-If you want to use a pre-processed dataset that leads to high BLEU scores, but for the `en-de` language pair, you can use `--dataset_name stas/wmt14-en-de-pre-processed`, as following:
 
-```bash
-python run_translation.py \
-    --model_name_or_path t5-small \
-    --do_train \
-    --do_eval \
-    --source_lang en \
-    --target_lang de \
-    --source_prefix "translate English to German: " \
-    --dataset_name stas/wmt14-en-de-pre-processed \
-    --output_dir /tmp/tst-translation \
-    --per_device_train_batch_size=4 \
-    --per_device_eval_batch_size=4 \
-    --overwrite_output_dir \
-    --predict_with_generate \
-    --use_ascend \
-    --use_combine_grad \
-    --npu_fp16 \
-    --npu_fp16_opt_level O2
- ```
-
-### Multi-card Training
-Here is an example of distributing training on 8 HPUs:
-```bash
-python -m torch.distributed.launch --nproc_per_node 8 run_translation.py \
-    --model_name_or_path t5-small \
-    --do_train \
-    --do_eval \
-    --source_lang en \
-    --target_lang de \
-    --source_prefix "translate English to German: " \
-    --dataset_name stas/wmt14-en-de-pre-processed \
-    --output_dir /tmp/tst-translation \
-    --per_device_train_batch_size=4 \
-    --per_device_eval_batch_size=4 \
-    --overwrite_output_dir \
-    --predict_with_generate \
-    --use_ascend \
-    --use_combine_grad \
-    --npu_fp16 \
-    --npu_fp16_opt_level O2
-```
+## 版本说明
+### 变更
+- 2023.03.05: 首次发布
+- 2023.04.04: eval阶段走二进制解决算子编译超时导致的掉卡问题

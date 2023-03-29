@@ -597,6 +597,9 @@ def main():
     )
     num_beams = data_args.num_beams if data_args.num_beams is not None else training_args.generation_num_beams
     if training_args.do_eval:
+        import torch
+        import torch_npu
+        torch_npu.npu.set_compile_mode(jit_compile=False)
         logger.info("*** Evaluate ***")
 
         metrics = trainer.evaluate(max_length=max_length, num_beams=num_beams, metric_key_prefix="eval")

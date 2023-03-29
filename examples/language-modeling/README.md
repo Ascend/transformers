@@ -1,19 +1,10 @@
 # Language model training
-
-Fine-tuning (or training from scratch) the library models for language modeling on a text dataset for GPT, GPT-2,
-ALBERT, BERT, DistilBERT, RoBERTa, XLNet... GPT and GPT-2 are trained or fine-tuned using a causal language modeling
-(CLM) loss while ALBERT, BERT, DistilBERT and RoBERTa are trained or fine-tuned using a masked language modeling (MLM)
-loss. XLNet uses permutation language modeling (PLM), you can find more information about the differences between those
-objectives in our [model summary](https://huggingface.co/transformers/model_summary.html).
-
-The following examples, will run on datasets hosted on our [hub](https://huggingface.co/datasets) or with your own
-text files for training and validation. We give examples of both below.
+本任务旨在从零训练或者微调模型，可以在文本数据集上对GPT、GPT-2、ALBERT、BERT、DistilBERT、RoBERTa、XLNet等模型进行语言建模。其中，GPT和GPT-2使用因果语言建模(causal language modeling, CLM)，ALBERT、BERT、DistilBERT和RoBERTa使用掩码语言建模(masked language modeling)，而XLNET使用
+permutation language modeling(PLM)。
 
 ## GPT-2/GPT and causal language modeling
 
-The following example fine-tunes GPT-2 on WikiText-2. We're using the raw WikiText-2 (no tokens were replaced before
-the tokenization). The loss here is that of causal language modeling.
-### Single-card Training
+下面展示如何在WikiText-2上微调GPT-2。我们使用的是原始的WikiText-2数据集(分词前没有词元被替换)：
 
 ```bash
 python run_clm.py \
@@ -24,17 +15,12 @@ python run_clm.py \
     --per_device_eval_batch_size 8 \
     --do_train \
     --do_eval \
-    --use_ascend \
+    --fp16 \
+    --fp16_opt_level O2 \
     --use_combine_grad \
-    --use_npu16 true \
-    --npu_fp16_opt_level O2 \
-    --output_dir /tmp/test-clm
+    --output_dir ./output
 ```
-
-This takes about xx minutes to train on a single NPU. It reaches
-a score of ~20 perplexity once fine-tuned on the dataset.
-
-To run on your own training and validation files, use the following command:
+在自定义数据集上训练模型：
 
 ```bash
 python run_clm.py \
@@ -45,39 +31,15 @@ python run_clm.py \
     --per_device_eval_batch_size 8 \
     --do_train \
     --do_eval \
-    --use_ascend \
+    --fp16 \
+    --fp16_opt_level O2 \
     --use_combine_grad \
-    --use_npu16 true \
-    --npu_fp16_opt_level O2 \
-    --output_dir /tmp/test-clm
+    --output_dir ./output
 ```
-### Multi-card Training
-```bash
-python -m torch.distributed.launch --nproc_per_node 8 run_clm.py \
-    --model_name_or_path gpt2 \
-    --train_file path_to_train_file \
-    --validation_file path_to_validation_file \
-    --per_device_train_batch_size 8 \
-    --per_device_eval_batch_size 8 \
-    --do_train \
-    --do_eval \
-    --use_ascend \
-    --use_combine_grad \
-    --use_npu16 true \
-    --npu_fp16_opt_level O2 \
-    --output_dir /tmp/test-clm
-```
-This takes about xx minutes to train on 8 NPUs. It reaches a perplexity of xx once fine-tuned on the dataset.
 
-## RoBERTa/BERT/DistilBERT and masked language modeling
+### RoBERTa/BERT/DistilBERT and masked language modeling
 
-The following example fine-tunes RoBERTa on WikiText-2. Here too, we're using the raw WikiText-2. The loss is different
-as BERT/RoBERTa have a bidirectional mechanism; we're therefore using the same loss that was used during their
-pre-training: masked language modeling.
-
-In accordance to the RoBERTa paper, we use dynamic masking rather than static masking. The model may, therefore,
-converge slightly slower (over-fitting takes more epochs).
-### Single-card Training
+在原生WikiText-2上微调RoBERTa：
 
 ```bash
 python run_mlm.py \
@@ -88,72 +50,32 @@ python run_mlm.py \
     --per_device_eval_batch_size 8 \
     --do_train \
     --do_eval \
-    --use_ascend \
+    --fp16 \
+    --fp16_opt_level O2 \
     --use_combine_grad \
-    --use_npu16 true \
-    --npu_fp16_opt_level O2 \
-    --output_dir /tmp/test-mlm
+    --output_dir ./ouput
 ```
+如果你的数据集是按照每行一个样本的形式组织的，你可以使用`--line_by_line`参数（拼接所有文本，然后将其分割成长度相同的块）。
 
-To run on your own training and validation files, use the following command:
+## 训练结果
+**[roberta-base](https://huggingface.co/roberta-base)在wikitext上训练结果展示表**
 
-```bash
-python run_mlm.py \
-    --model_name_or_path roberta-base \
-    --train_file path_to_train_file \
-    --validation_file path_to_validation_file \
-    --per_device_train_batch_size 8 \
-    --per_device_eval_batch_size 8 \
-    --do_train \
-    --do_eval \
-    --use_ascend \
-    --use_combine_grad \
-    --use_npu16 true \
-    --npu_fp16_opt_level O2 \
-    --output_dir /tmp/test-mlm
-```
+| roberta-base    | Acc    | FPS     | AMP_Type | Epochs |
+|-----------------|--------|---------|----------|--------|
+| 1p-V竞品          | 0.685  | 227.211 | O2       | 3      |
+| 8p-V竞品          | 0.6978 | 989.902 | O2       | 3      |
+| 1p-NPU(910ProB) | 0.6917 | 213.038 | O2       | 3      |
+| 8p-NPU(910ProB) | 0.6984 | 866.635 | O2       | 3      |
 
-If your dataset is organized with one sample per line, you can use the `--line_by_line` flag (otherwise the script
-concatenates all texts and then splits them in blocks of the same length).
+**[gpt2](https://huggingface.co/gpt2)在wikitext上训练结果展示表**
 
-**Note:** On NPU, you should use the flag `--pad_to_max_length` in conjunction with the `--line_by_line` flag to make
-sure all your batches have the same length.
-### Multi-card Training
-```bash
-python -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
-    --model_name_or_path roberta-base \
-    --dataset_name wikitext \
-    --dataset_config_name wikitext-2-raw-v1 \
-    --per_device_train_batch_size 8 \
-    --per_device_eval_batch_size 8 \
-    --do_train \
-    --do_eval \
-    --use_ascend \
-    --use_combine_grad \
-    --use_npu16 true \
-    --npu_fp16_opt_level O2 \
-    --output_dir /tmp/test-mlm
-```
+| gpt2            | Acc    | FPS    | AMP_Type | Epochs |
+|-----------------|--------|--------|----------|--------|
+| 1p-V竞品          | 42.62% | 16.842 | O2       | 3      |
+| 8p-V竞品          | 42.06% | -      | O2       | 3      |
+| 1p-NPU(910ProB) | 42.62% | 11.392 | O2       | 3      |
+| 8p-NPU(910ProB) | 42.25% | 69.126 | O2       | 3      |
 
-## Creating a model on the fly
-
-When training a model from scratch, configuration values may be overridden with the help of `--config_overrides`:
-
-
-```bash
-python run_clm.py \ 
-    --model_type gpt2 
-    --tokenizer_name gpt2 \ 
-    --config_overrides="n_embd=1024,n_head=16,n_layer=48,n_positions=102" \
-    --dataset_name wikitext \
-    --dataset_config_name wikitext-2-raw-v1 \
-    --per_device_train_batch_size 8 \
-    --per_device_eval_batch_size 8 \
-    --do_train \
-    --do_eval \
-    --use_ascend \
-    --use_combine_grad \
-    --use_npu16 true \
-    --npu_fp16_opt_level O2 \
-
-```
+## 版本说明
+### 变更
+- 2023.03.05: 首次发布
