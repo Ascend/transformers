@@ -1,6 +1,6 @@
 # Optimum Ascend
 ## 简介
-本项目开发了Optimum Ascend插件，用于晟腾NPU适配Transformers套件，为使用Transformers套件的开发者提供晟腾AI处理器的超强算力。当前已经验证的模型和任务可以下在[这里](https://gitee.com/ascend/transformers/tree/optimum#supported-models)查询。用户也可以自行尝试训练其他任务或模型。
+本项目开发了Optimum Ascend插件，用于昇腾NPU适配Transformers套件，为使用Transformers套件的开发者提供昇腾AI处理器的超强算力。当前已经验证的模型和任务可以下在[这里](https://gitee.com/ascend/transformers/tree/optimum#supported-models)查询。用户也可以自行尝试训练其他任务或模型。
 
 
 ## 安装
@@ -50,8 +50,6 @@ trainer = Trainer(
 - training_args = TrainingArguments(
 + training_args = NPUTrainingArguments(
   # training arguments...
-+ use_ascend=True,
-+ npu_fp16=True, # whether to use mixed precision training
 )
 
 # A lot of code here
@@ -93,7 +91,7 @@ trainer = Trainer(
 ```
 
 ### 支持的功能
-当前支持在晟腾NPU上对Transformers套件进行单机单卡、单机多卡训练以及（由apex插件提供的）混合精度训练。这里以[问答任务](https://gitee.com/ji-huazhong/transformers_test/tree/master/examples/question-answering)为例说明插件的用法。
+当前支持在昇腾NPU上对Transformers套件进行单机单卡、单机多卡训练以及（由apex插件提供的）混合精度训练。这里以[问答任务](https://gitee.com/ji-huazhong/transformers_test/tree/master/examples/question-answering)为例说明插件的用法。
 单卡训练脚本如下：
 ```bash
 python3.7 run_qa.py \
@@ -141,7 +139,7 @@ Optimum Ascend插件支持的模型和下游任务见下表。
 > Transformers套件支持的其他模型或下游任务可能也能被Optimum Ascend插件支持，用户可以自行尝试。
 
 ## 配置NPU训练环境
-请参考晟腾官方的《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+请参考昇腾官方的《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
 ## 版本说明
 ### 变更
