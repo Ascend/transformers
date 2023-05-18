@@ -12,9 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .training_args import NPUTrainingArguments
-from .trainer import NPUTrainer
-from .trainer_utils import patch_set_seed
+import random
 
-# Monkey patch
-patch_set_seed()
+import numpy as np
+import torch
+import torch_npu
+import transformers
+from transformers.utils import is_torch_available
+
+def set_seed(seed: int):
+    """
+    Helper function for reproducible behavior to set the seed in `random`, `numpy`, `torch` and/or `tf` (if installed).
+
+    Args:
+        seed (`int`): The seed to set.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    if is_torch_available():
+        torch.manual_seed(seed)
+        torch.npu.manual_seed_all(seed)
+
+def patch_set_seed():
+    transformers.trainer_utils.set_seed = set_seed
