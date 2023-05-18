@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .training_args import NPUTrainingArguments
-from .trainer import NPUTrainer
-from .trainer_utils import patch_set_seed
+import unitest
 
-# Monkey patch
-patch_set_seed()
+from optimum.ascend.npu_utils import is_torch_npu_available
+
+def require_torch_npu(test_case):
+    """
+    Decorator marking a test that requires a NPU (in PyTorch).
+    """
+    return unitest.skipUnless(is_torch_npu_available(check_device=False), "test requires PyTorch NPU")(test_case)
