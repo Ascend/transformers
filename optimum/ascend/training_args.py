@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
+from typing import Optional, Union
 from dataclasses import dataclass, field
 
 import torch
 import torch_npu
 
-from transformers.utils import logging
+import transformers
+from transformers.utils import ExplicitEnum, logging
 from transformers.file_utils import cached_property, torch_required
 from transformers.training_args import TrainingArguments
 from .npu_utils import is_torch_npu_available
@@ -26,12 +27,36 @@ from .npu_utils import is_torch_npu_available
 
 logger = logging.get_logger(__name__)
 
+
+class NPUOptimizerNames(ExplicitEnum):
+    """
+    NPUOptimizerNames is built on top of the transformers' OptimizerNames to
+    store the acceptable string identifiers for optimizers.
+    """
+
+    ADAMW_HF = "adamw_hf"
+    ADAMW_TORCH = "adamw_torch"
+    ADAMW_APEX_FUSED_NPU = "adamw_apex_fused_npu"
+    ADAFACTOR = "adafactor"
+    SGD = "sgd"
+    ADAGRAD = "adagrad"
+
+
+transformers.training_args.OptimizerNames = NPUOptimizerNames
+
+
 @dataclass
 class NPUTrainingArguments(TrainingArguments):
     """
     NPUTrainingArguments is built on top of the tranformers' TrainingArguments
     to enable deployment on Ascend's NPU.
     """
+
+    optim: Union[NPUOptimizerNames, str] = field(
+        default="adamw_hf",
+        metadata={"help": "The optimzer to use."}
+    )
+
     device_id: int = field(default=0, metadata={"help": "Specify which card to use during single card training"})
 
     use_combine_grad: bool = field(
