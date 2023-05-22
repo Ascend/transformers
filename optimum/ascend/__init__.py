@@ -15,6 +15,8 @@
 from .training_args import NPUTrainingArguments
 from .trainer import NPUTrainer
 from .trainer_utils import patch_set_seed
+from .bugfix import patch_bugfix_apex
 
 # Monkey patch
+patch_bugfix_apex()
 patch_set_seed()
