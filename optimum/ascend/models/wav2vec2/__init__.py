@@ -1,0 +1,1 @@
+from .modeling_wav2vec2 import npu_wav2vec2forpretraining_forward
