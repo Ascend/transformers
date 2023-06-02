@@ -1,0 +1,1 @@
+from .modeling_fnet import npu_fnetbasicfouriertransform_forward
