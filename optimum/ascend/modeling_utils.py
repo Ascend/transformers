@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from transormers.models.fnet.modeling_fnet import FNetBasicFourierTransform
 from transformers.models.wav2vec2.modeling_wav2vec2 import Wav2Vec2ForPreTraining
-
+from .models import npu_fnetbasicfouriertransform_forward
 from .models import npu_wav2vec2forpretraining_forward
 
 
@@ -21,6 +22,9 @@ def adapt_transformers_to_npu():
     """
     Replace some Transformers' methods for equivalent methods for Ascend NPU.
     """
+
+    # Optimization tweek for Fnet
+    FNetBasicFourierTransform.forward = npu_fnetbasicfouriertransform_forward
 
     # Optimization tweek for Wav2Vec2
     Wav2Vec2ForPreTraining.forward = npu_wav2vec2forpretraining_forward
