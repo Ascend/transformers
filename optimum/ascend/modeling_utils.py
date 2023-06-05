@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from transormers.models.fnet.modeling_fnet import FNetBasicFourierTransform
+from transformers.models.fnet.modeling_fnet import FNetBasicFourierTransform
 from transformers.models.wav2vec2.modeling_wav2vec2 import Wav2Vec2ForPreTraining
 from .models import npu_fnetbasicfouriertransform_forward
 from .models import npu_wav2vec2forpretraining_forward
