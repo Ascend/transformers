@@ -18,5 +18,5 @@ def npu_fnetbasicfouriertransform_forward(self, hidden_states):
     # https://pytorch.org/docs/master/generated/torch.vmap.html. Note that fourier transform methods will need
     # change accordingly.
 
-    outputs = self.fourier_transform(hidden_states.to("npu")).real.to(hidden_states.device)
+    outputs = self.fourier_transform(hidden_states.to("cpu")).real.to(hidden_states.device)
     return (outputs,)
