@@ -92,6 +92,7 @@ trainer = Trainer(
 
 ### 支持的功能
 当前支持在昇腾NPU上对Transformers套件进行单机单卡、单机多卡训练以及（由apex插件提供的）混合精度训练。这里以[问答任务](https://gitee.com/ji-huazhong/transformers_test/tree/master/examples/question-answering)为例说明插件的用法。
+
 单卡训练脚本如下：
 ```bash
 python3.7 run_qa.py \
@@ -102,6 +103,24 @@ python3.7 run_qa.py \
         --num_train_epochs 3 \
         --learning_rate 3e-5 \
         --device_id 0 \
+        --half_precision_backend apex \
+        --fp16 \
+        --fp16_opt_level O2 \
+        --optim adamw_apex_fused_npu \
+        --use_combine_grad \
+        --loss_scale 1024.0 \
+        --dataloader_drop_last \
+        --output_dir ./output
+```
+八卡训练脚本如下：
+```bash
+python3.7 -m torch.distributed.launch --nproc_per_node 8 run_qa.py \
+        --model_name_or_path albert-base-v2 \
+        --dataset_name squad \
+        --do_train \
+        --do_eval \
+        --num_train_epochs 3 \
+        --learning_rate 3e-5 \
         --half_precision_backend apex \
         --fp16 \
         --fp16_opt_level O2 \
@@ -149,6 +168,6 @@ Optimum Ascend插件支持的模型和下游任务见下表。
 ### 变更
 2023.03.29：首次发布
 
-2023.04.04：translation下游任务eval阶段使用二进制以解决算子编译过长导致的掉卡问题
+2023.05.25：代码重构，减少冗余的代码
 
 ## FQA
