@@ -26,6 +26,16 @@ if is_apex_available():
     from apex import amp
 
 
+def patch_cuda_amp():
+    import torch
+    import torch_npu
+    torch.cuda.amp.autocast = torch.npu.amp.autocast
+    torch.cuda.amp.GradScaler = torch.npu.amp.GradScaler
+
+
+patch_cuda_amp()
+
+
 class NPUTrainer(Trainer):
     """
     NPUTrainer is built on top of the tranformers' Trainer to enable
