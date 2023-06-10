@@ -20,7 +20,7 @@ import torch_npu
 
 import transformers
 from transformers.utils import ExplicitEnum, logging
-from transformers.file_utils import cached_property, torch_required
+from transformers.file_utils import cached_property
 from transformers.training_args import TrainingArguments
 from .npu_utils import is_torch_npu_available
 
@@ -36,6 +36,7 @@ class NPUOptimizerNames(ExplicitEnum):
 
     ADAMW_HF = "adamw_hf"
     ADAMW_TORCH = "adamw_torch"
+    ADAMW_TORCH_FUSED = "adamw_torch_fused"
     ADAMW_APEX_FUSED_NPU = "adamw_apex_fused_npu"
     ADAFACTOR = "adafactor"
     SGD = "sgd"
@@ -88,7 +89,6 @@ class NPUTrainingArguments(TrainingArguments):
         dummy_fp16 = False
 
     @cached_property
-    @torch_required
     def _setup_devices(self) -> "torch.device":
         logger.info("PyTorch-Optimum-Ascend: setting up devices")
         if torch.distributed.is_available() and torch.distributed.is_initialized() and self.local_rank == -1:

@@ -11,7 +11,7 @@ except Exception as error:
     assert False, "Error: Could not open '%s' due %s\n" % (filepath, error)
 
 INSTALL_REQUIRES = [
-    "transformers==4.25.1",
+    "transformers==4.28.1",
     "datasets",
     "tokenizers",
     "sentencepiece",
