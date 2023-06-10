@@ -121,7 +121,6 @@ python3.7 -m torch.distributed.launch --nproc_per_node 8 run_qa.py \
         --do_eval \
         --num_train_epochs 3 \
         --learning_rate 3e-5 \
-        --device_id 0 \
         --half_precision_backend apex \
         --fp16 \
         --fp16_opt_level O2 \
