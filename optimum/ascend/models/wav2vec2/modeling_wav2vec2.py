@@ -102,8 +102,8 @@ def npu_wav2vec2forpretraining_forward(
         target = ((1 - mask_time_indices.long()) * -100).transpose(0, 1).flatten()
 
         contrastive_loss = nn.functional.cross_entropy(
-            logits.float().to("cpu"), target.to("cpu"), reduction="sum"
-        ).to(target.device)
+            logits.double().to("cpu"), target.to("cpu"), reduction="sum"
+        ).float().to(target.device)
         # 7. compute diversity loss: \mathbf{L}_d
         num_codevectors = self.config.num_codevectors_per_group * self.config.num_codevector_groups
         diversity_loss = ((num_codevectors - codevector_perplexity) / num_codevectors) * mask_time_indices.sum()
