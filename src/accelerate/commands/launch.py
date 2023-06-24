@@ -35,6 +35,7 @@ from accelerate.utils import (
     PrepareForLaunch,
     _filter_args,
     is_deepspeed_available,
+    is_npu_available,
     is_rich_available,
     is_sagemaker_available,
     is_torch_version,
@@ -47,6 +48,10 @@ from accelerate.utils import (
     prepare_tpu,
 )
 from accelerate.utils.constants import DEEPSPEED_MULTINODE_LAUNCHERS, TORCH_DYNAMO_MODES
+
+
+if is_npu_available():
+    import torch_npu  # noqa: F401
 
 
 if is_rich_available():
@@ -894,11 +899,15 @@ def _validate_launch_command(args):
         if args.num_processes is None:
             if args.use_xpu and is_xpu_available():
                 args.num_processes = torch.xpu.device_count()
+            elif is_npu_available():
+                args.num_processes = torch.npu.device_count()
             else:
                 args.num_processes = torch.cuda.device_count()
             warned.append(f"\t`--num_processes` was set to a value of `{args.num_processes}`")
         if not args.multi_gpu and (
-            (args.use_xpu and is_xpu_available() and torch.xpu.device_count() > 1) or (torch.cuda.device_count() > 1)
+            (args.use_xpu and is_xpu_available() and torch.xpu.device_count() > 1) or
+            (torch.cuda.device_count() > 1) or
+            (torch.npu.device_count() > 1)
         ):
             warned.append(
                 "\t\tMore than one GPU was found, enabling multi-GPU training.\n"

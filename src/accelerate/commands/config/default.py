@@ -18,9 +18,13 @@ from pathlib import Path
 
 import torch
 
-from ...utils import is_xpu_available
+from ...utils import is_npu_available, is_xpu_available
 from .config_args import ClusterConfig, default_json_config_file
 from .config_utils import SubcommandHelpFormatter
+
+
+if is_npu_available():
+    import torch_npu  # noqa: F401
 
 
 description = "Create a default config file for Accelerate with only a few flags set."
@@ -59,6 +63,14 @@ def write_basic_config(mixed_precision="no", save_location: str = default_json_c
     }
     if torch.cuda.is_available():
         num_gpus = torch.cuda.device_count()
+        config["num_processes"] = num_gpus
+        config["use_cpu"] = False
+        if num_gpus > 1:
+            config["distributed_type"] = "MULTI_GPU"
+        else:
+            config["distributed_type"] = "NO"
+    elif is_npu_available():
+        num_gpus = torch.npu.device_count()
         config["num_processes"] = num_gpus
         config["use_cpu"] = False
         if num_gpus > 1:

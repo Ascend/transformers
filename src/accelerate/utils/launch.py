@@ -22,10 +22,21 @@ import torch
 
 from ..commands.config.config_args import SageMakerConfig
 from ..commands.config.config_utils import DYNAMO_BACKENDS
-from ..utils import DynamoBackend, PrecisionType, is_ipex_available, is_torch_version, is_xpu_available
+from ..utils import (
+    DynamoBackend,
+    PrecisionType,
+    is_ipex_available,
+    is_npu_available,
+    is_torch_version,
+    is_xpu_available,
+)
 from ..utils.constants import DEEPSPEED_MULTINODE_LAUNCHERS
 from ..utils.other import merge_dicts
 from .dataclasses import DistributedType, SageMakerDistributedType
+
+
+if is_npu_available():
+    import torch_npu  # noqa: F401
 
 
 def get_launch_prefix():
@@ -70,10 +81,12 @@ def prepare_simple_launcher_cmd_env(args: argparse.Namespace) -> Tuple[List[str]
     current_env = os.environ.copy()
     current_env["ACCELERATE_USE_CPU"] = str(args.cpu or args.use_cpu)
     if args.gpu_ids != "all" and args.gpu_ids is not None:
-        if not is_xpu_available():
-            current_env["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
-        else:
+        if is_npu_available():
+            current_env["ASCEND_RT_VISIBLE_DEVICES"] = args.gpu_ids
+        elif is_xpu_available():
             current_env["ZE_AFFINITY_MASK"] = args.gpu_ids
+        else:
+            current_env["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
     if args.num_machines > 1:
         current_env["MASTER_ADDR"] = args.main_process_ip
         current_env["MASTER_PORT"] = str(args.main_process_port)
@@ -138,10 +151,12 @@ def prepare_multi_gpu_env(args: argparse.Namespace) -> Dict[str, str]:
     current_env = os.environ.copy()
     gpu_ids = getattr(args, "gpu_ids", "all")
     if gpu_ids != "all" and args.gpu_ids is not None:
-        if not is_xpu_available():
-            current_env["CUDA_VISIBLE_DEVICES"] = gpu_ids
+        if is_npu_available():
+            current_env["ASCEND_RT_VISIBLE_DEVICES"] = args.gpu_ids
+        elif is_xpu_available():
+            current_env["ZE_AFFINITY_MASK"] = args.gpu_ids
         else:
-            current_env["ZE_AFFINITY_MASK"] = gpu_ids
+            current_env["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
     mixed_precision = args.mixed_precision.lower()
     try:
         mixed_precision = PrecisionType(mixed_precision)
