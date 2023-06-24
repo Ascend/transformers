@@ -178,6 +178,25 @@ def is_mps_available():
     return is_torch_version(">=", "1.12") and torch.backends.mps.is_available() and torch.backends.mps.is_built()
 
 
+def is_npu_available(check_device=False):
+    """Check if `torch_npu` is installed and potentially if a NPU is in the environment"""
+    if importlib.util.find_spec("torch") is None:
+        return False
+
+    if importlib.util.find_spec("torch_npu") is not None:
+        if check_device:
+            # We need to check if `torch.npu.device_count` > 0, will raise a RuntimeError if not
+            try:
+                import torch
+                import torch_npu  # noqa: F401
+
+                return torch.npu.device_count() > 0
+            except RuntimeError:
+                return False
+        return True
+    return False
+
+
 def is_ipex_available():
     def get_major_and_minor_from_version(full_version):
         return str(version.parse(full_version).major) + "." + str(version.parse(full_version).minor)

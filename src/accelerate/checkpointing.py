@@ -28,10 +28,15 @@ from .utils import (
     SCALER_NAME,
     SCHEDULER_NAME,
     get_pretty_name,
+    is_npu_available,
     is_tpu_available,
     is_xpu_available,
     save,
 )
+
+
+if is_npu_available():
+    import torch_npu  # noqa: F401
 
 
 if is_tpu_available(check_device=False):
@@ -103,6 +108,8 @@ def save_accelerator_state(
     states["torch_manual_seed"] = torch.get_rng_state()
     if is_xpu_available():
         states["torch_xpu_manual_seed"] = torch.xpu.get_rng_state_all()
+    elif is_npu_available():
+        states["torch_npu_manual_seed"] = torch.npu.get_rng_state_all()
     else:
         states["torch_cuda_manual_seed"] = torch.cuda.get_rng_state_all()
     if is_tpu_available():
@@ -188,6 +195,8 @@ def load_accelerator_state(
         torch.set_rng_state(states["torch_manual_seed"])
         if is_xpu_available():
             torch.xpu.set_rng_state_all(states["torch_xpu_manual_seed"])
+        elif is_npu_available():
+            torch.npu.set_rng_state_all(states["torch_npu_manual_seed"])
         else:
             torch.cuda.set_rng_state_all(states["torch_cuda_manual_seed"])
         if is_tpu_available():

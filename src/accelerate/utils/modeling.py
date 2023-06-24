@@ -30,9 +30,13 @@ import torch.nn as nn
 
 from ..state import AcceleratorState
 from .dataclasses import DistributedType
-from .imports import is_mps_available, is_safetensors_available, is_torch_version, is_xpu_available
+from .imports import is_mps_available, is_npu_available, is_safetensors_available, is_torch_version, is_xpu_available
 from .offload import load_offloaded_weight, offload_weight, save_offload_index
 from .tqdm import is_tqdm_available, tqdm
+
+
+if is_npu_available():
+    import torch_npu  # noqa: F401
 
 
 if is_safetensors_available():
@@ -477,14 +481,18 @@ def get_max_memory(max_memory: Optional[Dict[Union[int, str], Union[int, str]]] 
 
         else:
             # Make sure CUDA is initialized on each GPU to have the right memory info.
-            if not is_xpu_available():
-                for i in range(torch.cuda.device_count()):
+            if is_npu_available():
+                for i in range(torch.npu.device_count()):
                     _ = torch.tensor([0], device=i)
-                max_memory = {i: torch.cuda.mem_get_info(i)[0] for i in range(torch.cuda.device_count())}
-            else:
+                max_memory = {i: torch.npu.max_memory_allocated(i) for i in range(torch.npu.device_count())}
+            elif is_xpu_available():
                 for i in range(torch.xpu.device_count()):
                     _ = torch.tensor(0, device=torch.device("xpu", i))
                 max_memory = {i: torch.xpu.max_memory_allocated(i) for i in range(torch.xpu.device_count())}
+            else:
+                for i in range(torch.cuda.device_count()):
+                    _ = torch.tensor([0], device=i)
+                max_memory = {i: torch.cuda.mem_get_info(i)[0] for i in range(torch.cuda.device_count())}
         # allocate everything in the mps device as the RAM is shared
         if is_mps_available():
             max_memory["mps"] = psutil.virtual_memory().available
@@ -584,17 +592,19 @@ def get_balanced_memory(
     if not (torch.cuda.is_available() or is_xpu_available()) or is_mps_available():
         return max_memory
 
-    if not is_xpu_available():
-        num_devices = len([d for d in max_memory if torch.device(d).type == "cuda" and max_memory[d] > 0])
-    else:
+    if is_npu_available():
+        num_devices = len([d for d in max_memory if torch.device(d).type == "npu" and max_memory[d] > 0])
+    elif is_xpu_available():
         num_devices = len(
             [
                 d
                 for d in max_memory
                 if (torch.device(d).type == "xpu" or torch.xpu.get_device_properties(d).dev_type == "gpu")
-                and max_memory[d] > 0
+                   and max_memory[d] > 0
             ]
         )
+    else:
+        num_devices = len([d for d in max_memory if torch.device(d).type == "cuda" and max_memory[d] > 0])
 
     if num_devices == 1:
         # We cannot do low_zero on just one GPU

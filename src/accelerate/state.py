@@ -35,12 +35,17 @@ from .utils import (
     is_fp8_available,
     is_ipex_available,
     is_mps_available,
+    is_npu_available,
     is_tpu_available,
     is_xpu_available,
     parse_choice_from_env,
     parse_flag_from_env,
 )
 from .utils.dataclasses import SageMakerDistributedType
+
+
+if is_npu_available():
+    import torch_npu  # noqa: F401
 
 
 if is_tpu_available(check_device=False):
@@ -184,17 +189,20 @@ class PartialState:
             elif int(os.environ.get("LOCAL_RANK", -1)) != -1 and not cpu and torch.cuda.is_available():
                 self.distributed_type = DistributedType.MULTI_GPU
                 if not torch.distributed.is_initialized():
-                    self.backend = kwargs.pop("backend", "nccl")
+                    self.backend = kwargs.pop("backend", "hccl" if is_npu_available() else "nccl")
                     # Special case for `TrainingArguments`, where `backend` will be `None`
                     if self.backend is None:
-                        self.backend = "nccl"
+                        self.backend = "hccl" if is_npu_available() else "nccl"
                     torch.distributed.init_process_group(backend=self.backend, **kwargs)
                 self.num_processes = torch.distributed.get_world_size()
                 self.process_index = torch.distributed.get_rank()
                 self.local_process_index = int(os.environ.get("LOCAL_RANK", -1))
                 if self.device is None:
-                    self.device = torch.device("cuda", self.local_process_index)
-                torch.cuda.set_device(self.device)
+                    self.device = torch.device("npu" if is_npu_available() else "cuda", self.local_process_index)
+                if is_npu_available():
+                    torch.npu.set_device(self.device)
+                else:
+                    torch.cuda.set_device(self.device)
             elif get_int_from_env(["PMI_SIZE", "OMPI_COMM_WORLD_SIZE", "MV2_COMM_WORLD_SIZE", "WORLD_SIZE"], 1) > 1:
                 if not cpu and is_xpu_available():
                     self.distributed_type = DistributedType.MULTI_XPU
@@ -656,6 +664,8 @@ class PartialState:
             return torch.device("mps")
         elif torch.cuda.is_available():
             return torch.device("cuda")
+        elif is_npu_available():
+            return torch.device("npu")
         elif is_xpu_available():
             return torch.device("xpu:0")
         else:

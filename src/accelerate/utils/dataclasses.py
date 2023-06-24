@@ -335,6 +335,7 @@ class PrecisionType(BaseEnum):
 class RNGType(BaseEnum):
     TORCH = "torch"
     CUDA = "cuda"
+    NPU = "npu"
     XLA = "xla"
     XPU = "xpu"
     GENERATOR = "generator"

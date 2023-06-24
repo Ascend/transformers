@@ -68,6 +68,7 @@ from .utils import (
     is_fp8_available,
     is_ipex_available,
     is_megatron_lm_available,
+    is_npu_available,
     is_torch_version,
     is_tpu_available,
     is_xpu_available,
@@ -123,6 +124,10 @@ if is_torch_version(">", "1.10.0"):
 if is_tpu_available(check_device=False):
     import torch_xla.core.xla_model as xm
     import torch_xla.distributed.xla_multiprocessing as xmp
+
+
+if is_npu_available():
+    import torch_npu  # noqa: F401
 
 
 try:
@@ -409,7 +414,7 @@ class Accelerator:
             and self.distributed_type not in (DistributedType.DEEPSPEED, DistributedType.MEGATRON_LM)
         ):
             self.native_amp = True
-            if self.device.type not in ("cuda", "mps"):
+            if self.device.type not in ("cuda", "mps", "npu"):
                 raise ValueError(err.format(mode="fp16", requirement="a GPU"))
             kwargs = self.scaler_handler.to_kwargs() if self.scaler_handler is not None else {}
             if self.distributed_type == DistributedType.FSDP:
@@ -417,7 +422,10 @@ class Accelerator:
 
                 self.scaler = ShardedGradScaler(**kwargs)
             else:
-                self.scaler = torch.cuda.amp.GradScaler(**kwargs)
+                if is_npu_available():
+                    self.scaler = torch.npu.amp.GradScaler(**kwargs)
+                else:
+                    self.scaler = torch.cuda.amp.GradScaler(**kwargs)
 
         elif self.state.mixed_precision == "bf16" and self.distributed_type not in (
             DistributedType.DEEPSPEED,
@@ -1325,13 +1333,19 @@ class Accelerator:
         if self.native_amp:
             model._original_forward = model.forward
             if self.mixed_precision == "fp16" and is_torch_version(">=", "1.10"):
-                model.forward = MethodType(torch.cuda.amp.autocast(dtype=torch.float16)(model.forward.__func__), model)
+                if is_npu_available():
+                    model.forward = MethodType(torch.npu.amp.autocast(dtype=torch.float16)(model.forward.__func__), model)
+                else:
+                    model.forward = MethodType(torch.cuda.amp.autocast(dtype=torch.float16)(model.forward.__func__), model)
             elif self.mixed_precision == "bf16" and self.distributed_type != DistributedType.TPU:
                 model.forward = MethodType(
                     torch.autocast(device_type=self.device.type, dtype=torch.bfloat16)(model.forward.__func__), model
                 )
             else:
-                model.forward = MethodType(torch.cuda.amp.autocast()(model.forward.__func__), model)
+                if is_npu_available():
+                    model.forward = MethodType(torch.npu.amp.autocast()(model.forward.__func__), model)
+                else:
+                    model.forward = MethodType(torch.cuda.amp.autocast()(model.forward.__func__), model)
             model.forward = MethodType(convert_outputs_to_fp32(model.forward.__func__), model)
         elif self.mixed_precision == "fp8":
             if not has_transformer_engine_layers(model):
