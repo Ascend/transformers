@@ -33,6 +33,7 @@ from accelerate.utils import (
     gather,
     is_bf16_available,
     is_ipex_available,
+    is_npu_available,
     is_torch_version,
     is_xpu_available,
     set_seed,
@@ -40,11 +41,16 @@ from accelerate.utils import (
 )
 
 
+if is_npu_available():
+    import torch_npu  # noqa: F401
+
+
 # TODO: remove RegressionModel4XPU once ccl support empty buffer in broadcasting.
 if is_xpu_available():
     from accelerate.test_utils import RegressionModel4XPU as RegressionModel
 else:
     from accelerate.test_utils import RegressionModel
+
 
 
 def print_main(state):
@@ -149,8 +155,12 @@ def rng_sync_check():
     synchronize_rng_states(["torch"])
     assert are_the_same_tensors(torch.get_rng_state()), "RNG states improperly synchronized on CPU."
     if state.distributed_type == DistributedType.MULTI_GPU:
-        synchronize_rng_states(["cuda"])
-        assert are_the_same_tensors(torch.cuda.get_rng_state()), "RNG states improperly synchronized on GPU."
+        if is_npu_available():
+            synchronize_rng_states(["npu"])
+            assert are_the_same_tensors(torch.npu.get_rng_state()), "RNG states improperly synchronized on NPU."
+        else:
+            synchronize_rng_states(["cuda"])
+            assert are_the_same_tensors(torch.cuda.get_rng_state()), "RNG states improperly synchronized on GPU."
     elif state.distributed_type == DistributedType.MULTI_XPU:
         synchronize_rng_states(["xpu"])
         assert are_the_same_tensors(torch.xpu.get_rng_state()), "RNG states improperly synchronized on XPU."
@@ -383,8 +393,32 @@ def training_check():
         assert torch.allclose(old_model.a, model.a), "Did not obtain the same model on CPU or distributed training."
         assert torch.allclose(old_model.b, model.b), "Did not obtain the same model on CPU or distributed training."
 
+    if is_npu_available():
+        # Mostly a test that FP16 doesn't crash as the operation inside the model is not converted to FP16
+        print("FP16 training check.")
+        AcceleratorState._reset_state()
+        accelerator = Accelerator(mixed_precision="fp16")
+        train_dl = DataLoader(train_set, batch_size=batch_size, shuffle=True, generator=generator)
+        model = RegressionModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+
+        train_dl, model, optimizer = accelerator.prepare(train_dl, model, optimizer)
+        set_seed(42)
+        generator.manual_seed(42)
+        for _ in range(3):
+            for batch in train_dl:
+                model.zero_grad()
+                output = model(batch["x"])
+                loss = torch.nn.functional.mse_loss(output, batch["y"])
+                accelerator.backward(loss)
+                optimizer.step()
+
+        model = accelerator.unwrap_model(model).cpu()
+        assert torch.allclose(old_model.a, model.a), "Did not obtain the same model on CPU or distributed training."
+        assert torch.allclose(old_model.b, model.b), "Did not obtain the same model on CPU or distributed training."
+
     # BF16 support is only for CPU + TPU, and some GPU
-    if is_bf16_available():
+    if is_bf16_available() and not is_npu_available():
         # Mostly a test that BF16 doesn't crash as the operation inside the model is not converted to BF16
         print("BF16 training check.")
         AcceleratorState._reset_state()
