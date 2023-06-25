@@ -79,7 +79,8 @@ class TestTrainerDistributedNPU(TestCasePlus):
 if __name__ == "__main__":
     # The script below is meant to be run under torch.distributed, on a machine with multiple GPUs:
     #
-    # PYTHONPATH="src" python -m torch.distributed.run --nproc_per_node 2 --output_dir output_dir ./tests/test_trainer_distributed.py
+    # PYTHONPATH="src" python -m torch.distributed.run --nproc_per_node 2 ./tests/test_trainer_distributed.py \
+    # --output_dir output_dir
 
     parser = HfArgumentParser((TrainingArguments,))
     training_args = parser.parse_args_into_dataclasses()[0]
@@ -94,13 +95,13 @@ if __name__ == "__main__":
     for dataset_length in [101, 40, 7]:
         dataset = DummyDataset(dataset_length)
 
-        def compute_metrics(p: EvalPrediction) -> Dict:
+        def compute_metrics(ep: EvalPrediction) -> Dict:
             sequential = list(range(len(dataset)))
-            success = p.predictions.tolist() == sequential and p.label_ids.tolist() == sequential
+            success = ep.predictions.tolist() == sequential and ep.label_ids.tolist() == sequential
             if not success and training_args.local_rank == 0:
                 logger.warning(
                     "Predictions and/or labels do not match expected results:\n  - predictions: "
-                    f"{p.predictions.tolist()}\n  - labels: {p.label_ids.tolist()}\n  - expected: {sequential}"
+                    f"{ep.predictions.tolist()}\n  - labels: {ep.label_ids.tolist()}\n  - expected: {sequential}"
                 )
             return {"success": success}
 
