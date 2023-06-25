@@ -1028,7 +1028,7 @@ class Accelerator:
     def _prepare_one(self, obj, first_pass=False, device_placement=None):
         # First pass of preparation: DataLoader, model, optimizer
         if first_pass:
-            if isinstance(obj, torch.utils.data.DataLoader):
+            if isinstance(obj, torch.utils.data.dataloader.DataLoader):
                 return self.prepare_data_loader(obj, device_placement=device_placement)
             elif isinstance(obj, torch.nn.Module):
                 return self.prepare_model(obj, device_placement=device_placement)
