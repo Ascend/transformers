@@ -27,7 +27,7 @@ from transformers.utils import (
     requires_backends,
 )
 from transformers.file_utils import cached_property
-from transformers.training_args import TrainingArguments
+from transformers.training_args import ParallelMode, TrainingArguments
 from .npu_utils import is_torch_npu_available
 
 
@@ -129,6 +129,18 @@ class NPUTrainingArguments(TrainingArguments):
         else:
             self.distributed_state = PartialState(backend=self.ddp_backend)
             self._n_gpu = 1
+        if not is_sagemaker_mp_enabled():
+            device = self.distributed_state.device
+            self.local_rank = self.distributed_state.local_process_index
+        if (
+            torch.distributed.is_available()
+            and torch.distributed.is_initialized()
+            and self.parallel_mode != ParallelMode.DISTRIBUTED
+        ):
+            logger.warning(
+                "torch.distributed process group is initialized, but parallel_mode != ParallelMode.DISTRIBUTED. "
+                "In order to use Torch DDP, launch your script with `python -m torch.distributed.launch`"
+            )
         if self.distributed_state.distributed_type == DistributedType.NO:
             if self.no_cuda:
                 device = torch.device("cpu")
