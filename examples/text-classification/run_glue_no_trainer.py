@@ -32,6 +32,7 @@ from huggingface_hub import Repository, create_repo
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
+from optimum.ascend import transfor_to_npu
 import transformers
 from transformers import (
     AutoConfig,

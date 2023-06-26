@@ -29,6 +29,7 @@ import evaluate
 import numpy as np
 from datasets import load_dataset
 
+from optimum.ascend import transfor_to_npu
 import transformers
 from transformers import (
     AutoConfig,
