@@ -467,9 +467,9 @@ def main():
 
     # Get the metric function
     if args.task_name is not None:
-        metric = evaluate.load("glue", args.task_name)
+        metric = evaluate.load("./metrics/glue", args.task_name)
     else:
-        metric = evaluate.load("accuracy")
+        metric = evaluate.load("./metrics/accuracy")
 
     # Train!
     total_batch_size = args.per_device_train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps

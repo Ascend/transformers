@@ -357,7 +357,7 @@ def main():
             )
 
     # Get the metric function
-    metric = evaluate.load("xnli")
+    metric = evaluate.load("./metrics/xnli")
 
     # You can define your custom compute_metrics function. It takes an `EvalPrediction` object (a namedtuple with a
     # predictions and label_ids field) and has to return a dictionary string to float.
