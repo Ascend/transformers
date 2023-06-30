@@ -19,12 +19,13 @@ Running this example:
 python run_generation_contrastive_search.py --model_name_or_path=gpt2-large --penalty_alpha=0.6 --k=4 --length=256
 """
 
-
+import time
 import argparse
 import logging
 
 import numpy as np
 import torch
+import torch_npu
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -41,7 +42,7 @@ def set_seed(args):
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     if args.n_gpu > 0:
-        torch.cuda.manual_seed_all(args.seed)
+        torch.npu.manual_seed_all(args.seed)
 
 
 def main():
@@ -73,7 +74,7 @@ def main():
     parser.add_argument("--xlm_language", type=str, default="", help="Optional language when used with the XLM model.")
 
     parser.add_argument("--seed", type=int, default=42, help="random seed for initialization")
-    parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
+    parser.add_argument("--no_npu", action="store_true", help="Avoid using NPU when available")
     parser.add_argument(
         "--fp16",
         action="store_true",
@@ -81,8 +82,8 @@ def main():
     )
     args = parser.parse_args()
 
-    args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-    args.n_gpu = 0 if args.no_cuda else torch.cuda.device_count()
+    args.device = torch.device("npu" if torch.npu.is_available() and not args.no_npu else "cpu")
+    args.n_gpu = 0 if args.no_npu else torch.npu.device_count()
 
     logger.warning(f"device: {args.device}, n_gpu: {args.n_gpu}, 16-bits training: {args.fp16}")
 
@@ -92,8 +93,6 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
     model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path)
 
-    # tokenizer = GPT2Tokenizer.from_pretrained(args.model_name_or_path)
-    # model = OPTForCausalLM.from_pretrained(args.model_name_or_path)
     model.to(args.device)
 
     if args.fp16:
@@ -105,6 +104,7 @@ def main():
     inputs = tokenizer(prompt_text, return_tensors="pt", add_special_tokens=False)
     inputs = {key: value.to(args.device) for key, value in inputs.items()}
 
+    start = time.time()
     output_sequences = model.generate(
         **inputs,
         max_length=args.length + len(inputs["input_ids"][0]),
@@ -130,9 +130,15 @@ def main():
 
         generated_sequences.append(total_sequence)
         print(total_sequence)
+    end = time.time()
+    print(f'=== text generation cost: {end - start}')
 
     return generated_sequences
 
 
 if __name__ == "__main__":
+    torch_npu.npu.set_compile_mode(jit_compile=False)
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "MaskedFill"
+    torch.npu.set_option(option)
     main()
