@@ -32,6 +32,7 @@ import numpy as np
 import torch
 from datasets import DatasetDict, load_dataset
 
+from optimum.ascend import transfor_to_npu
 import transformers
 from transformers import (
     AutoConfig,
@@ -46,8 +47,11 @@ from transformers import (
     set_seed,
 )
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
-from transformers.utils import check_min_version, send_example_telemetry
+from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
+
+import torch_npu
+torch_npu.npu.set_compile_mode(jit_compile=False)
 
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
@@ -378,10 +382,6 @@ def main():
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-
-    # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
-    # information sent is the one passed as arguments along with your Python/PyTorch versions.
-    send_example_telemetry("run_speech_recognition_ctc", model_args, data_args)
 
     # Detecting last checkpoint.
     last_checkpoint = None
@@ -747,26 +747,6 @@ def main():
 
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
-
-    # Write model card and (optionally) push to hub
-    config_name = data_args.dataset_config_name if data_args.dataset_config_name is not None else "na"
-    kwargs = {
-        "finetuned_from": model_args.model_name_or_path,
-        "tasks": "automatic-speech-recognition",
-        "tags": ["automatic-speech-recognition", data_args.dataset_name],
-        "dataset_args": (
-            f"Config: {config_name}, Training split: {data_args.train_split_name}, Eval split:"
-            f" {data_args.eval_split_name}"
-        ),
-        "dataset": f"{data_args.dataset_name.upper()} - {config_name.upper()}",
-    }
-    if "common_voice" in data_args.dataset_name:
-        kwargs["language"] = config_name
-
-    if training_args.push_to_hub:
-        trainer.push_to_hub(**kwargs)
-    else:
-        trainer.create_model_card(**kwargs)
 
     return results
 
