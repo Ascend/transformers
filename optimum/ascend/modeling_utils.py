@@ -21,6 +21,17 @@ from transformers.utils import WEIGHTS_NAME
 from transformers.utils.hub import convert_file_size_to_int
 from transformers.modeling_utils import dtype_byte_size
 
+from transformers.models.wav2vec2.modeling_wav2vec2 import Wav2Vec2ForPreTraining
+from .models import npu_wav2vec2forpretraining_forward
+
+
+def adapt_transformers_to_npu():
+    """
+    Replace some Transformers' methods for equivalent methods for Ascend NPU.
+    """
+
+    # Bugfix for Wav2Vec2
+    Wav2Vec2ForPreTraining.forward = npu_wav2vec2forpretraining_forward
 
 def shard_checkpoint(
     state_dict: Dict[str, torch.Tensor], max_shard_size: Union[int, str] = "10GB", weights_name: str = WEIGHTS_NAME
