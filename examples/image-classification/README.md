@@ -1,211 +1,76 @@
-<!---
-Copyright 2021 The HuggingFace Team. All rights reserved.
+# Image classification
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+本项目展示如何在Ascend NPU下运行Tansformers的[image-classification](https://github.com/huggingface/transformers/tree/v4.30.2/examples/pytorch/image-classification)任务。
 
-    http://www.apache.org/licenses/LICENSE-2.0
+## 准备训练环境
+### 准备环境
+- 环境准备指导。
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  当前基于 PyTorch 1.11 完成测试。
+- 安装依赖
+  
+  1、使用 NPU 设备源码安装适配昇腾的 accelerate
+  ```text
+  git clone -b accelerate-v0.21.0 https://gitee.com/ascend/transformers.git accelerate
+  cd accelerate
+  pip3 install -e .
+  ```
+  2、使用 NPU 设备源码安装 Transformers 插件
+  ```text
+  git clone -b v4.30.2 https://gitee.com/ascend/transformers.git
+  cd transformers
+  pip3 install -e .
+  ```
+  > 注：该插件依赖Transformers-v4.30.2，将会自动安装该版本
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
+  3、安装text-classification任务所需依赖
+  ```text
+  pip3 install -r requirements.txt
+  ```
 
-# Image classification examples
-
-This directory contains 2 scripts that showcase how to fine-tune any model supported by the [`AutoModelForImageClassification` API](https://huggingface.co/docs/transformers/main/en/model_doc/auto#transformers.AutoModelForImageClassification) (such as [ViT](https://huggingface.co/docs/transformers/main/en/model_doc/vit), [ConvNeXT](https://huggingface.co/docs/transformers/main/en/model_doc/convnext), [ResNet](https://huggingface.co/docs/transformers/main/en/model_doc/resnet), [Swin Transformer](https://huggingface.co/docs/transformers/main/en/model_doc/swin)...) using PyTorch. They can be used to fine-tune models on both [datasets from the hub](#using-datasets-from-hub) as well as on [your own custom data](#using-your-own-data).
-
-<img src="https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/image_classification_inference_widget.png" height="400" />
-
-Try out the inference widget here: https://huggingface.co/google/vit-base-patch16-224
-
-Content:
-- [PyTorch version, Trainer](#pytorch-version-trainer)
-- [PyTorch version, no Trainer](#pytorch-version-no-trainer)
-
-## PyTorch version, Trainer
-
-Based on the script [`run_image_classification.py`](https://github.com/huggingface/transformers/blob/main/examples/pytorch/image-classification/run_image_classification.py).
-
-The script leverages the 🤗 [Trainer API](https://huggingface.co/docs/transformers/main_classes/trainer) to automatically take care of the training for you, running on distributed environments right away.
-
-### Using datasets from Hub
-
-Here we show how to fine-tune a Vision Transformer (`ViT`) on the [beans](https://huggingface.co/datasets/beans) dataset, to classify the disease type of bean leaves.
-
-```bash
-python run_image_classification.py \
-    --dataset_name beans \
-    --output_dir ./beans_outputs/ \
-    --remove_unused_columns False \
-    --do_train \
-    --do_eval \
-    --push_to_hub \
-    --push_to_hub_model_id vit-base-beans \
-    --learning_rate 2e-5 \
-    --num_train_epochs 5 \
-    --per_device_train_batch_size 8 \
-    --per_device_eval_batch_size 8 \
-    --logging_strategy steps \
-    --logging_steps 10 \
-    --evaluation_strategy epoch \
-    --save_strategy epoch \
-    --load_best_model_at_end True \
-    --save_total_limit 3 \
-    --seed 1337
+### 准备数据集
+image-classification示例使用的数据集由Hugging Face提供的接口自动下载无需额外准备，如果出现数据集和metric预处理脚本下载失败的问题，请手动下载
+- metric：把[accuracy](https://github.com/huggingface/evaluate/tree/main/metrics/accuracy)放到`image-classification`目录下
+- datasets: 把[beans](https://huggingface.co/datasets/beans)放到`image-classificatoin`目录下
+```text
+ image-classification
+    ├── accuracy
+    │   ├── accuracy.py
+    │   └── app.py
+    ├── beans
+    │   ├── data
+    │   │    ├── test.zip
+    │   │    ├── train.zip 
+    │   │    └── validation.py
+    │   ├── dataset_infos.json
+    │   └── beans.py
+    └── ... 
 ```
 
-👀 See the results here: [nateraw/vit-base-beans](https://huggingface.co/nateraw/vit-base-beans).
+### 准备预训练权重
+官方[audio-classification](https://github.com/huggingface/transformers/tree/v4.30.2/examples/pytorch/audio-classification)中`run_image_classificaton.py`和`run_image_classificaton_no_trainer.py`使用的预训练权重为[vit-base-patch16-224-in21k](https://huggingface.co/google/vit-base-patch16-224-in21k)，请按需下载相应的权重并置于`run_image_classification.py`同级目录下。
 
-Note that you can replace the model and dataset by simply setting the `model_name_or_path` and `dataset_name` arguments respectively, with any model or dataset from the [hub](https://huggingface.co/). For an overview of all possible arguments, we refer to the [docs](https://huggingface.co/docs/transformers/main_classes/trainer#transformers.TrainingArguments) of the `TrainingArguments`, which can be passed as flags.
+## 开始训练
+- 使用Trainer类的用例
+  ```text
+  bash ./test/run_image_classification.sh
+  ```
+- 不使用Trainer类通过accelerate启动的用例
+  ```text
+  bash ./test/run_image_classification_no_trainer.sh
+  ```
 
-> If your model classification head dimensions do not fit the number of labels in the dataset, you can specify `--ignore_mismatched_sizes` to adapt it.
+## 训练结果
 
-### Using your own data
+| Architecture | Pretrained Model                                                                       | Script                                                                                                                                 | supported  | 
+|--------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|------------|
+| vit          | [vit-base-patch16-224-in21k](https://huggingface.co/google/vit-base-patch16-224-in21k) | [run_image_classification.sh](https://gitee.com/ascend/transformers/blob/v4.30.2/examples/text-generation/run_image_classification.sh) | ✔️         |
 
-To use your own dataset, there are 2 ways:
-- you can either provide your own folders as `--train_dir` and/or `--validation_dir` arguments
-- you can upload your dataset to the hub (possibly as a private repo, if you prefer so), and simply pass the `--dataset_name` argument.
 
-Below, we explain both in more detail.
 
-#### Provide them as folders
 
-If you provide your own folders with images, the script expects the following directory structure:
+## 版本说明
+### 变更
+- 2023.06.26：Transformers版本更新到v4.30.2
+- 2023.03.05: 首次发布
 
-```bash
-root/dog/xxx.png
-root/dog/xxy.png
-root/dog/[...]/xxz.png
-
-root/cat/123.png
-root/cat/nsdf3.png
-root/cat/[...]/asd932_.png
-```
-
-In other words, you need to organize your images in subfolders, based on their class. You can then run the script like this:
-
-```bash
-python run_image_classification.py \
-    --train_dir <path-to-train-root> \
-    --output_dir ./outputs/ \
-    --remove_unused_columns False \
-    --do_train \
-    --do_eval
-```
-
-Internally, the script will use the [`ImageFolder`](https://huggingface.co/docs/datasets/v2.0.0/en/image_process#imagefolder) feature which will automatically turn the folders into 🤗 Dataset objects.
-
-##### 💡 The above will split the train dir into training and evaluation sets
-  - To control the split amount, use the `--train_val_split` flag.
-  - To provide your own validation split in its own directory, you can pass the `--validation_dir <path-to-val-root>` flag.
-
-#### Upload your data to the hub, as a (possibly private) repo
-
-It's very easy (and convenient) to upload your image dataset to the hub using the [`ImageFolder`](https://huggingface.co/docs/datasets/v2.0.0/en/image_process#imagefolder) feature available in 🤗 Datasets. Simply do the following:
-
-```python
-from datasets import load_dataset
-
-# example 1: local folder
-dataset = load_dataset("imagefolder", data_dir="path_to_your_folder")
-
-# example 2: local files (suppoted formats are tar, gzip, zip, xz, rar, zstd)
-dataset = load_dataset("imagefolder", data_files="path_to_zip_file")
-
-# example 3: remote files (suppoted formats are tar, gzip, zip, xz, rar, zstd)
-dataset = load_dataset("imagefolder", data_files="https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_3367a.zip")
-
-# example 4: providing several splits
-dataset = load_dataset("imagefolder", data_files={"train": ["path/to/file1", "path/to/file2"], "test": ["path/to/file3", "path/to/file4"]})
-```
-
-`ImageFolder` will create a `label` column, and the label name is based on the directory name.
-
-Next, push it to the hub!
-
-```python
-# assuming you have ran the huggingface-cli login command in a terminal
-dataset.push_to_hub("name_of_your_dataset")
-
-# if you want to push to a private repo, simply pass private=True:
-dataset.push_to_hub("name_of_your_dataset", private=True)
-```
-
-and that's it! You can now train your model by simply setting the `--dataset_name` argument to the name of your dataset on the hub (as explained in [Using datasets from the 🤗 hub](#using-datasets-from-hub)).
-
-More on this can also be found in [this blog post](https://huggingface.co/blog/image-search-datasets).
-
-### Sharing your model on 🤗 Hub
-
-0. If you haven't already, [sign up](https://huggingface.co/join) for a 🤗 account
-
-1. Make sure you have `git-lfs` installed and git set up.
-
-```bash
-$ apt install git-lfs
-$ git config --global user.email "you@example.com"
-$ git config --global user.name "Your Name"
-```
-
-2. Log in with your HuggingFace account credentials using `huggingface-cli`:
-
-```bash
-$ huggingface-cli login
-# ...follow the prompts
-```
-
-3. When running the script, pass the following arguments:
-
-```bash
-python run_image_classification.py \
-    --push_to_hub \
-    --push_to_hub_model_id <name-your-model> \
-    ...
-```
-
-## PyTorch version, no Trainer
-
-Based on the script [`run_image_classification_no_trainer.py`](https://github.com/huggingface/transformers/blob/main/examples/pytorch/image-classification/run_image_classification_no_trainer.py).
-
-Like `run_image_classification.py`, this script allows you to fine-tune any of the models on the [hub](https://huggingface.co/models) on an image classification task. The main difference is that this script exposes the bare training loop, to allow you to quickly experiment and add any customization you would like.
-
-It offers less options than the script with `Trainer` (for instance you can easily change the options for the optimizer
-or the dataloaders directly in the script) but still run in a distributed setup, and supports mixed precision by
-the means of the [🤗 `Accelerate`](https://github.com/huggingface/accelerate) library. You can use the script normally
-after installing it:
-
-```bash
-pip install git+https://github.com/huggingface/accelerate
-```
-
-You can then use your usual launchers to run in it in a distributed environment, but the easiest way is to run
-
-```bash
-accelerate config
-```
-
-and reply to the questions asked. Then
-
-```bash
-accelerate test
-```
-
-that will check everything is ready for training. Finally, you can launch training with
-
-```bash
-accelerate launch run_image_classification_trainer.py
-```
-
-This command is the same and will work for:
-
-- single/multiple CPUs
-- single/multiple GPUs
-- TPUs
-
-Note that this library is in alpha release so your feedback is more than welcome if you encounter any problem using it.
-
-Regarding using custom data with this script, we refer to [using your own data](#using-your-own-data).

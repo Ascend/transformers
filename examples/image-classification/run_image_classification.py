@@ -34,6 +34,7 @@ from torchvision.transforms import (
     ToTensor,
 )
 
+from optimum.ascend import transfor_to_npu
 import transformers
 from transformers import (
     MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING,
@@ -48,6 +49,9 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
+
+import torch_npu
+torch_npu.npu.set_compile_mode(jit_compile=False)
 
 
 """ Fine-tuning a 🤗 Transformers model for image classification"""
@@ -175,10 +179,6 @@ def main():
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-
-    # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
-    # information sent is the one passed as arguments along with your Python/PyTorch versions.
-    send_example_telemetry("run_image_classification", model_args, data_args)
 
     # Setup logging
     logging.basicConfig(
@@ -378,18 +378,6 @@ def main():
         metrics = trainer.evaluate()
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
-
-    # Write model card and (optionally) push to hub
-    kwargs = {
-        "finetuned_from": model_args.model_name_or_path,
-        "tasks": "image-classification",
-        "dataset": data_args.dataset_name,
-        "tags": ["image-classification", "vision"],
-    }
-    if training_args.push_to_hub:
-        trainer.push_to_hub(**kwargs)
-    else:
-        trainer.create_model_card(**kwargs)
 
 
 if __name__ == "__main__":
