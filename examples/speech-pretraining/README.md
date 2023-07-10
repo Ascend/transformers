@@ -1,161 +1,50 @@
-<!---
-Copyright 2021 The HuggingFace Team. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 # Speech Recognition Pre-Training
 
+本项目展示如何在Ascend NPU下运行Tansformers的[speech-pretraining](https://github.com/huggingface/transformers/tree/v4.30.2/examples/pytorch/speech-pretraining)任务。
 
-## Wav2Vec2 Speech Pre-Training
+## 准备训练环境
+### 准备环境
+- 环境准备指导。
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  当前基于 PyTorch 1.11 完成测试。
+- 安装依赖
+  
+  1、使用 NPU 设备源码安装适配昇腾的 accelerate
+  ```text
+  git clone -b accelerate-v0.21.0 https://gitee.com/ascend/transformers.git accelerate
+  cd accelerate
+  pip3 install -e .
+  ```
+  2、使用 NPU 设备源码安装 Transformers 插件
+  ```text
+  git clone -b v4.30.2 https://gitee.com/ascend/transformers.git
+  cd transformers
+  pip3 install -e .
+  ```
+  > 注：该插件依赖Transformers-v4.30.2，将会自动安装该版本
 
-The script [`run_speech_wav2vec2_pretraining_no_trainer.py`](https://github.com/huggingface/transformers/blob/main/examples/pytorch/speech-pretraining/run_wav2vec2_pretraining_no_trainer.py) can be used to pre-train a [Wav2Vec2](https://huggingface.co/transformers/model_doc/wav2vec2.html?highlight=wav2vec2) model from scratch.
+  3、安装speech-pretraining任务所需依赖
+  ```text
+  pip3 install -r requirements.txt
+  ```
 
-In the script [`run_speech_wav2vec2_pretraining_no_trainer`](https://github.com/huggingface/transformers/blob/main/examples/pytorch/speech-pretraining/run_wav2vec2_pretraining_no_trainer.py), a Wav2Vec2 model is pre-trained on audio data alone using [Wav2Vec2's contrastive loss objective](https://arxiv.org/abs/2006.11477).
+### 准备数据集&metric
+speech-pretraining示例使用的数据集由Hugging Face提供的接口自动下载无需额外准备，如果出现数据集和metric预处理脚本下载失败的问题，请手动下载
 
-The following examples show how to fine-tune a `"base"`-sized Wav2Vec2 model as well as a `"large"`-sized Wav2Vec2 model using [`accelerate`](https://github.com/huggingface/accelerate).
-
-
----
-**NOTE 1**
-
-Wav2Vec2's pre-training is known to be quite unstable.
-It is advised to do a couple of test runs with a smaller dataset,
-*i.e.* `--dataset_config_names clean clean`, `--dataset_split_names validation test`
-to find good hyper-parameters for `learning_rate`, `batch_size`, `num_warmup_steps`,
-and the optimizer.
-A good metric to observe during training is the gradient norm which should ideally be between 0.5 and 2.
-
----
-
----
-**NOTE 2**
-
-When training a model on large datasets it is recommended to run the data preprocessing 
-in a first run in a **non-distributed** mode via `--preprocessing_only` so that 
-when running the model in **distributed** mode in a second step the preprocessed data
-can easily be loaded on each distributed device.
-
----
-
-### Demo
-
-In this demo run we pre-train a `"base-sized"` Wav2Vec2 model simply only on the validation
-and test data of [librispeech_asr](https://huggingface.co/datasets/librispeech_asr).
-
-The demo is run on two Titan RTX (24 GB RAM each). In case you have less RAM available 
-per device, consider reducing `--batch_size` and/or the `--max_duration_in_seconds`.
+### 准备预训练权重
 
 
-```bash
-accelerate launch run_wav2vec2_pretraining_no_trainer.py \
-	--dataset_name="librispeech_asr" \
-	--dataset_config_names clean clean \
-	--dataset_split_names validation test \
-	--model_name_or_path="patrickvonplaten/wav2vec2-base-v2" \
-	--output_dir="./wav2vec2-pretrained-demo" \
-	--max_train_steps="20000" \
-	--num_warmup_steps="32000" \
-	--gradient_accumulation_steps="8" \
-	--learning_rate="0.005" \
-	--weight_decay="0.01" \
-	--max_duration_in_seconds="20.0" \
-	--min_duration_in_seconds="2.0" \
-	--logging_steps="1" \
-	--saving_steps="10000" \
-	--per_device_train_batch_size="8" \
-	--per_device_eval_batch_size="8" \
-	--adam_beta1="0.9" \
-	--adam_beta2="0.98" \
-	--adam_epsilon="1e-06" \
-	--gradient_checkpointing \
-	--mask_time_prob="0.65" \
-	--mask_time_length="10"
+## 开始训练
+```text
+bash ./test/run_xxx.sh
 ```
 
-The results of this run can be seen [here](https://wandb.ai/patrickvonplaten/wav2vec2-pretrained-demo/reports/Wav2Vec2-PreTraining-Demo-Run--VmlldzoxMDk3MjAw?accessToken=oa05s1y57lizo2ocxy3k01g6db1u4pt8m6ur2n8nl4cb0ug02ms2cw313kb8ruch).
+## 训练结果
+| Architecture       | Pretrained Model | Script                                                                                                                                            | supported | 
+|--------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| wav2vec2           | pretraining      | [run_wav2vec2_pretraining](https://gitee.com/ascend/transformers/blob/v4.30.2/examples/speech-pretraining/run_wav2vec2_pretraining_no_trainer.sh) | ✔️        |
 
-### Base
-
-To pre-train `"base-sized"` Wav2Vec2 model, *e.g.* [facebook/wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base) 
-on [librispeech_asr](https://huggingface.co/datasets/librispeech_asr), the following command can be run:
-
-```bash
-accelerate launch run_wav2vec2_pretraining_no_trainer.py \
-	--dataset_name=librispeech_asr \
-	--dataset_config_names clean clean other \
-	--dataset_split_names train.100 train.360 train.500 \
-	--model_name_or_path="patrickvonplaten/wav2vec2-base-v2" \
-	--output_dir="./wav2vec2-pretrained-demo" \
-	--max_train_steps="200000" \
-	--num_warmup_steps="32000" \
-	--gradient_accumulation_steps="4" \
-	--learning_rate="0.001" \
-	--weight_decay="0.01" \
-	--max_duration_in_seconds="20.0" \
-	--min_duration_in_seconds="2.0" \
-	--logging_steps="1" \
-	--saving_steps="10000" \
-	--per_device_train_batch_size="8" \
-	--per_device_eval_batch_size="8" \
-	--adam_beta1="0.9" \
-	--adam_beta2="0.98" \
-	--adam_epsilon="1e-06" \
-	--gradient_checkpointing \
-	--mask_time_prob="0.65" \
-	--mask_time_length="10"
-```
-
-The experiment was run on 8 GPU V100 (16 GB RAM each) for 4 days. 
-In case you have more than 8 GPUs available for a higher effective `batch_size`,
-it is recommended to increase the `learning_rate` to `0.005` for faster convergence.
-
-The results of this run can be seen [here](https://wandb.ai/patrickvonplaten/test/reports/Wav2Vec2-Base--VmlldzoxMTUyODQ0?accessToken=rg6e8u9yizx964k8q47zctq1m4afpvtn1i3qi9exgdmzip6xwkfzvagfajpzj55n) and the checkpoint pretrained for 85,000 steps can be accessed [here](https://huggingface.co/patrickvonplaten/wav2vec2-base-repro-960h-libri-85k-steps)
-
-
-### Large
-
-To pre-train `"large-sized"` Wav2Vec2 model, *e.g.* [facebook/wav2vec2-large-lv60](https://huggingface.co/facebook/wav2vec2-large-lv60), 
-on [librispeech_asr](https://huggingface.co/datasets/librispeech_asr), the following command can be run:
-
-```bash
-accelerate launch run_wav2vec2_pretraining_no_trainer.py \ 
-	--dataset_name=librispeech_asr \
-	--dataset_config_names clean clean other \
-	--dataset_split_names train.100 train.360 train.500 \
-	--output_dir=./test \
-	--max_train_steps=200000 \
-	--num_warmup_steps=32000 \
-	--gradient_accumulation_steps=8 \
-	--learning_rate=0.001 \
-	--weight_decay=0.01 \
-	--max_duration_in_seconds=20.0 \
-	--min_duration_in_seconds=2.0 \
-	--model_name_or_path=./ 
-	--logging_steps=1 \
-	--saving_steps=10000 \
-	--per_device_train_batch_size=2 \
-	--per_device_eval_batch_size=4 \
-	--adam_beta1=0.9 \
-	--adam_beta2=0.98 \
-	--adam_epsilon=1e-06 \
-	--gradient_checkpointing \
-	--mask_time_prob=0.65 \
-	--mask_time_length=10
-```
-
-The experiment was run on 8 GPU V100 (16 GB RAM each) for 7 days. 
-In case you have more than 8 GPUs available for a higher effective `batch_size`,
-it is recommended to increase the `learning_rate` to `0.005` for faster convergence.
-
-The results of this run can be seen [here](https://wandb.ai/patrickvonplaten/pretraining-wav2vec2/reports/Wav2Vec2-Large--VmlldzoxMTAwODM4?accessToken=wm3qzcnldrwsa31tkvf2pdmilw3f63d4twtffs86ou016xjbyilh55uoi3mo1qzc) and the checkpoint pretrained for 120,000 steps can be accessed [here](https://huggingface.co/patrickvonplaten/wav2vec2-large-repro-960h-libri-120k-steps)
+## 版本说明
+### 变更
+- 2023.06.26：Transformers版本更新到v4.30.2
+- 2023.03.05: 首次发布
