@@ -22,6 +22,9 @@ from pathlib import Path
 import datasets
 import numpy as np
 import torch
+import torch_npu
+
+from optimum.ascend import transfor_to_npu
 from accelerate import Accelerator, DistributedType
 from accelerate.utils import set_seed
 from datasets import load_dataset
@@ -44,6 +47,8 @@ from transformers import (
 from transformers.utils import check_min_version, get_full_repo_name, send_example_telemetry
 from transformers.utils.versions import require_version
 
+
+torch_npu.npu.set_compile_mode(jit_compile=False)
 
 """ Pre-training a 🤗 Transformers model for simple masked image modeling (SimMIM)
 without using HuggingFace Trainer.
@@ -366,10 +371,6 @@ def collate_fn(examples):
 
 def main():
     args = parse_args()
-
-    # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
-    # information sent is the one passed as arguments along with your Python/PyTorch versions.
-    send_example_telemetry("run_mim_no_trainer", args)
 
     # Initialize the accelerator. We will let the accelerator handle device placement for us in this example.
     # If we're using tracking, we also need to initialize it here and it will by default pick up all supported trackers

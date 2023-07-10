@@ -21,9 +21,11 @@ from typing import Optional
 
 import numpy as np
 import torch
+import torch_npu
 from datasets import load_dataset
 from torchvision.transforms import Compose, Lambda, Normalize, RandomHorizontalFlip, RandomResizedCrop, ToTensor
 
+from optimum.ascend import transfor_to_npu
 import transformers
 from transformers import (
     CONFIG_MAPPING,
@@ -37,9 +39,11 @@ from transformers import (
     TrainingArguments,
 )
 from transformers.trainer_utils import get_last_checkpoint
-from transformers.utils import check_min_version, send_example_telemetry
+from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
 
+
+torch_npu.npu.set_compile_mode(jit_compile=False)
 
 """ Pre-training a 🤗 Transformers model for simple masked image modeling (SimMIM).
 Any model supported by the AutoModelForMaskedImageModeling API can be used.
@@ -238,10 +242,6 @@ def main():
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-
-    # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
-    # information sent is the one passed as arguments along with your Python/PyTorch versions.
-    send_example_telemetry("run_mim", model_args, data_args)
 
     # Setup logging
     logging.basicConfig(
@@ -452,18 +452,6 @@ def main():
         metrics = trainer.evaluate()
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
-
-    # Write model card and (optionally) push to hub
-    kwargs = {
-        "finetuned_from": model_args.model_name_or_path,
-        "tasks": "masked-image-modeling",
-        "dataset": data_args.dataset_name,
-        "tags": ["masked-image-modeling"],
-    }
-    if training_args.push_to_hub:
-        trainer.push_to_hub(**kwargs)
-    else:
-        trainer.create_model_card(**kwargs)
 
 
 if __name__ == "__main__":
