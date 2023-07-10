@@ -1,148 +1,76 @@
-<!---
-Copyright 2021 The HuggingFace Team. All rights reserved.
+# Audio classification
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+本项目展示如何在Ascend NPU下运行Tansformers的[audio-classification](https://github.com/huggingface/transformers/tree/v4.30.2/examples/pytorch/audio-classification)任务。
 
-    http://www.apache.org/licenses/LICENSE-2.0
+## 准备训练环境
+### 准备环境
+- 环境准备指导。
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  当前基于 PyTorch 1.11 完成测试。
+- 安装依赖
+  
+  1、使用 NPU 设备源码安装适配昇腾的 accelerate
+  ```text
+  git clone -b accelerate-v0.21.0 https://gitee.com/ascend/transformers.git accelerate
+  cd accelerate
+  pip3 install -e .
+  ```
+  2、使用 NPU 设备源码安装 Transformers 插件
+  ```text
+  git clone -b v4.30.2 https://gitee.com/ascend/transformers.git
+  cd transformers
+  pip3 install -e .
+  ```
+  > 注：该插件依赖Transformers-v4.30.2，将会自动安装该版本
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
+  3、安装audio-classification任务所需依赖
+  ```text
+  pip3 install -r requirements.txt
+  ```
 
-# Audio classification examples
-
-The following examples showcase how to fine-tune `Wav2Vec2` for audio classification using PyTorch.
-
-Speech recognition models that have been pretrained in unsupervised fashion on audio data alone,
-*e.g.* [Wav2Vec2](https://huggingface.co/transformers/main/model_doc/wav2vec2.html),
-[HuBERT](https://huggingface.co/transformers/main/model_doc/hubert.html),
-[XLSR-Wav2Vec2](https://huggingface.co/transformers/main/model_doc/xlsr_wav2vec2.html), have shown to require only
-very little annotated data to yield good performance on speech classification datasets.
-
-## Single-GPU
-
-The following command shows how to fine-tune [wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base) on the 🗣️ [Keyword Spotting subset](https://huggingface.co/datasets/superb#ks) of the SUPERB dataset.
-
-```bash
-python run_audio_classification.py \
-    --model_name_or_path facebook/wav2vec2-base \
-    --dataset_name superb \
-    --dataset_config_name ks \
-    --output_dir wav2vec2-base-ft-keyword-spotting \
-    --overwrite_output_dir \
-    --remove_unused_columns False \
-    --do_train \
-    --do_eval \
-    --fp16 \
-    --learning_rate 3e-5 \
-    --max_length_seconds 1 \
-    --attention_mask False \
-    --warmup_ratio 0.1 \
-    --num_train_epochs 5 \
-    --per_device_train_batch_size 32 \
-    --gradient_accumulation_steps 4 \
-    --per_device_eval_batch_size 32 \
-    --dataloader_num_workers 4 \
-    --logging_strategy steps \
-    --logging_steps 10 \
-    --evaluation_strategy epoch \
-    --save_strategy epoch \
-    --load_best_model_at_end True \
-    --metric_for_best_model accuracy \
-    --save_total_limit 3 \
-    --seed 0 \
-    --push_to_hub
+### 准备数据集&metric
+audio-classification示例使用的数据集由Hugging Face提供的接口自动下载无需额外准备，如果出现数据集和metric预处理脚本下载失败的问题，请手动下载
+- metric：把[accuracy](https://github.com/huggingface/evaluate/tree/main/metrics/accuracy)放到`audio-classification`目录下
+- datasets: 把[supert](https://huggingface.co/datasets/superb)放到`audio-classificatoin`目录下
+```text
+audio-classification
+  ├── accuracy
+  │   ├── accuracy.py
+  │   └── app.py
+  ├── superb
+  │   ├── dataset_infos.json
+  │   └── superb.py
+  └── ... 
 ```
 
-On a single V100 GPU (16GB), this script should run in ~14 minutes and yield accuracy of **98.26%**.
-
-👀 See the results here: [anton-l/wav2vec2-base-ft-keyword-spotting](https://huggingface.co/anton-l/wav2vec2-base-ft-keyword-spotting)
-
-> If your model classification head dimensions do not fit the number of labels in the dataset, you can specify `--ignore_mismatched_sizes` to adapt it.
-
-## Multi-GPU
-
-The following command shows how to fine-tune [wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base) for 🌎 **Language Identification** on the [CommonLanguage dataset](https://huggingface.co/datasets/anton-l/common_language).
-
-```bash
-python run_audio_classification.py \
-    --model_name_or_path facebook/wav2vec2-base \
-    --dataset_name common_language \
-    --audio_column_name audio \
-    --label_column_name language \
-    --output_dir wav2vec2-base-lang-id \
-    --overwrite_output_dir \
-    --remove_unused_columns False \
-    --do_train \
-    --do_eval \
-    --fp16 \
-    --learning_rate 3e-4 \
-    --max_length_seconds 16 \
-    --attention_mask False \
-    --warmup_ratio 0.1 \
-    --num_train_epochs 10 \
-    --per_device_train_batch_size 8 \
-    --gradient_accumulation_steps 4 \
-    --per_device_eval_batch_size 1 \
-    --dataloader_num_workers 8 \
-    --logging_strategy steps \
-    --logging_steps 10 \
-    --evaluation_strategy epoch \
-    --save_strategy epoch \
-    --load_best_model_at_end True \
-    --metric_for_best_model accuracy \
-    --save_total_limit 3 \
-    --seed 0 \
-    --push_to_hub
+### 准备预训练权重
+官方[audio-classification](https://github.com/huggingface/transformers/tree/v4.30.2/examples/pytorch/audio-classification)中`run_audio_classification.py`使用的预训练权重为[wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base)，请按需下载相应的权重并置于`run_audio_classification.py`同级目录下。
+```text
+audio-classification
+  ├── wav2vec2-base
+  │   ├── config.json
+  │   ├── preprocessor_config.json
+  │   ├── pytorch_model.bin
+  │   ├── special_tokens_map.json
+  │   ├── tokenizer_config.json
+  │   └── vocab.json       
+  └── ... 
 ```
 
-On 4 V100 GPUs (16GB), this script should run in ~1 hour and yield accuracy of **79.45%**.
+## 开始训练
+- 使用Trainer类的用例
+  ```text
+  bash ./test/run_audio_classificatoin.sh
+  ```
 
-👀 See the results here: [anton-l/wav2vec2-base-lang-id](https://huggingface.co/anton-l/wav2vec2-base-lang-id)
+## 训练结果
+| Architecture       | Pretrained Model                                                                       | Script                                                                                                                                      | supported | 
+|--------------------|----------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| wav2vec2           | [wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base)                         | [run_audio_classificatoin.sh](https://gitee.com/ascend/transformers/blob/v4.30.2/examples/audio-classification/run_audio_classification.sh) | ✔️        |
+| wav2vec2-conformer | [wav2vec2-conformer](https://huggingface.co/facebook/wav2vec2-conformer-rel-pos-large) | [run_wav2vec2_conformer.sh](https://gitee.com/ascend/transformers/blob/v4.30.2/examples/audio-classification/run_wav2vec2_conformer.sh)     | ✔️        |
 
-## Sharing your model on 🤗 Hub
+## 版本说明
+### 变更
+- 2023.06.26：Transformers版本更新到v4.30.2
+- 2023.03.05: 首次发布
 
-0. If you haven't already, [sign up](https://huggingface.co/join) for a 🤗 account
-
-1. Make sure you have `git-lfs` installed and git set up.
-
-```bash
-$ apt install git-lfs
-```
-
-2. Log in with your HuggingFace account credentials using `huggingface-cli`
-
-```bash
-$ huggingface-cli login
-# ...follow the prompts
-```
-
-3. When running the script, pass the following arguments:
-
-```bash
-python run_audio_classification.py \
-    --push_to_hub \
-    --hub_model_id <username/model_id> \
-    ...
-```
-
-### Examples
-
-The following table shows a couple of demonstration fine-tuning runs.
-It has been verified that the script works for the following datasets:
-
-- [SUPERB Keyword Spotting](https://huggingface.co/datasets/superb#ks)
-- [Common Language](https://huggingface.co/datasets/common_language)
-
-| Dataset | Pretrained Model | # transformer layers | Accuracy on eval | GPU setup | Training time | Fine-tuned Model & Logs |
-|---------|------------------|----------------------|------------------|-----------|---------------|--------------------------|
-| Keyword Spotting | [ntu-spml/distilhubert](https://huggingface.co/ntu-spml/distilhubert) | 2 | 0.9706 | 1 V100 GPU | 11min  | [here](https://huggingface.co/anton-l/distilhubert-ft-keyword-spotting) |
-| Keyword Spotting | [facebook/wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base) | 12 | 0.9826 | 1 V100 GPU | 14min  | [here](https://huggingface.co/anton-l/wav2vec2-base-ft-keyword-spotting) |
-| Keyword Spotting | [facebook/hubert-base-ls960](https://huggingface.co/facebook/hubert-base-ls960) | 12 | 0.9819 | 1 V100 GPU | 14min  | [here](https://huggingface.co/anton-l/hubert-base-ft-keyword-spotting) |
-| Keyword Spotting | [asapp/sew-mid-100k](https://huggingface.co/asapp/sew-mid-100k) | 24 | 0.9757 | 1 V100 GPU | 15min  | [here](https://huggingface.co/anton-l/sew-mid-100k-ft-keyword-spotting) |
-| Common Language | [facebook/wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base) | 12 | 0.7945 | 4 V100 GPUs | 1h10m  | [here](https://huggingface.co/anton-l/wav2vec2-base-lang-id) |
