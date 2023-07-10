@@ -1,108 +1,65 @@
-<!---
-Copyright 2020 The HuggingFace Team. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 # Multiple Choice
 
-## Fine-tuning on SWAG with the Trainer
+本项目展示如何在Ascend NPU下运行Tansformers的[multiple-choice](https://github.com/huggingface/transformers/tree/v4.30.2/examples/pytorch/multiple-choice)任务。
 
-`run_swag` allows you to fine-tune any model from our [hub](https://huggingface.co/models) (as long as its architecture as a `ForMultipleChoice` version in the library) on the SWAG dataset or your own csv/jsonlines files as long as they are structured the same way. To make it works on another dataset, you will need to tweak the `preprocess_function` inside the script.
+## 准备训练环境
+### 准备环境
+- 环境准备指导。
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  当前基于 PyTorch 1.11 完成测试。
+- 安装依赖
+  
+  1、使用 NPU 设备源码安装适配昇腾的 accelerate
+  ```text
+  git clone -b accelerate-v0.21.0 https://gitee.com/ascend/transformers.git accelerate
+  cd accelerate
+  pip3 install -e ./
+  ```
+  2、使用 NPU 设备源码安装 Transformers 插件
+  ```text
+  git clone -b v4.30.2 https://gitee.com/ascend/transformers.git
+  cd transformers
+  pip3 install -e ./
+  ```
+  > 注：该插件依赖Transformers-v4.30.2，将会自动安装该版本
 
-```bash
-python examples/multiple-choice/run_swag.py \
---model_name_or_path roberta-base \
---do_train \
---do_eval \
---learning_rate 5e-5 \
---num_train_epochs 3 \
---output_dir /tmp/swag_base \
---per_gpu_eval_batch_size=16 \
---per_device_train_batch_size=16 \
---overwrite_output
-```
-Training with the defined hyper-parameters yields the following results:
-```
-***** Eval results *****
-eval_acc = 0.8338998300509847
-eval_loss = 0.44457291918821606
-```
+  3、安装speech-recognition任务所需依赖
+  ```text
+  pip3 install -r requirements.txt
+  ```
 
-## With Accelerate
+### 准备数据集
+multiple-choice 示例使用的数据集由Hugging Face提供的接口自动下载无需额外准备，，如果出现数据集预处理脚本下载失败的问题，请手动下载
 
-Based on the script [run_swag_no_trainer.py](https://github.com/huggingface/transformers/blob/main/examples/pytorch/multiple-choice/run_swag_no_trainer.py).
+- datatsets: 把[swag](https://huggingface.co/datasets/swag)放到`language-modeling`目录下
 
-Like `run_swag.py`, this script allows you to fine-tune any of the models on the [hub](https://huggingface.co/models) (as long as its architecture as a `ForMultipleChoice` version in the library) on
-the SWAG dataset or your own data in a csv or a JSON file. The main difference is that this
-script exposes the bare training loop, to allow you to quickly experiment and add any customization you would like.
-
-It offers less options than the script with `Trainer` (but you can easily change the options for the optimizer
-or the dataloaders directly in the script) but still run in a distributed setup, on TPU and supports mixed precision by
-the mean of the [🤗 `Accelerate`](https://github.com/huggingface/accelerate) library. You can use the script normally
-after installing it:
-
-```bash
-pip install git+https://github.com/huggingface/accelerate
-```
-
-then
-
-```bash
-export DATASET_NAME=swag
-
-python run_swag_no_trainer.py \
-  --model_name_or_path bert-base-cased \
-  --dataset_name $DATASET_NAME \
-  --max_seq_length 128 \
-  --per_device_train_batch_size 32 \
-  --learning_rate 2e-5 \
-  --num_train_epochs 3 \
-  --output_dir /tmp/$DATASET_NAME/
+```text
+ language-modeling
+    ├── swag
+    │   ├── dataset_infos.json
+    │   └── swag.py
+    └── ... 
 ```
 
-You can then use your usual launchers to run in it in a distributed environment, but the easiest way is to run
+### 准备预训练权重
+请从[huggingface hub](https://huggingface.co/models)下载预训练权重
 
-```bash
-accelerate config
+## 开始训练
+请执行
 ```
-
-and reply to the questions asked. Then
-
-```bash
-accelerate test
+bash test/run_xxx.sh
 ```
+拉起训练任务
 
-that will check everything is ready for training. Finally, you can launch training with
+## 训练结果
 
-```bash
-export DATASET_NAME=swag
+| Architecture | Pretrained Model                                                          | Script                                                                                                             | supported | 
+|--------------|---------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|-----------|
+| roberta      | [roberta-base](https://huggingface.co/roberta-base)                       | [run_swag.sh](https://gitee.com/ascend/transformers/blob/v4.30.2/examples/multiple-choice/run_swag.sh)             | ✔️        |
+| distilbert   | [distilbert-base-uncased](https://huggingface.co/distilbert-base-uncased) | [run_distilbert.sh](https://gitee.com/ascend/transformers/blob/v4.30.2/examples/multiple-choice/run_distilbert.sh) | ✔️        |
 
-accelerate launch run_swag_no_trainer.py \
-  --model_name_or_path bert-base-cased \
-  --dataset_name $DATASET_NAME \
-  --max_seq_length 128 \
-  --per_device_train_batch_size 32 \
-  --learning_rate 2e-5 \
-  --num_train_epochs 3 \
-  --output_dir /tmp/$DATASET_NAME/
-```
 
-This command is the same and will work for:
-
-- a CPU-only setup
-- a setup with one GPU
-- a distributed training with several GPUs (single or multi node)
-- a training on TPUs
-
-Note that this library is in alpha release so your feedback is more than welcome if you encounter any problem using it.
+## 版本说明
+### 变更
+2023.06.26：Transformers版本更新到v4.30.2
+2023.03.05: 首次发布
