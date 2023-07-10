@@ -24,6 +24,9 @@ from typing import Dict, List, Optional, Union
 
 import datasets
 import torch
+import torch_npu
+
+from optimum.ascend import transfor_to_npu
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from datasets import DatasetDict, concatenate_datasets, load_dataset
@@ -43,8 +46,10 @@ from transformers import (
     set_seed,
 )
 from transformers.models.wav2vec2.modeling_wav2vec2 import _compute_mask_indices, _sample_negative_indices
-from transformers.utils import get_full_repo_name, send_example_telemetry
+from transformers.utils import get_full_repo_name
 
+
+torch_npu.npu.set_compile_mode(jit_compile=False)
 
 logger = get_logger(__name__)
 
@@ -391,10 +396,6 @@ def main():
     # We now keep distinct sets of args, for a cleaner separation of concerns.
     args = parse_args()
 
-    # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
-    # information sent is the one passed as arguments along with your Python/PyTorch versions.
-    send_example_telemetry("run_wav2vec2_pretraining_no_trainer", args)
-
     # Initialize the accelerator. We will let the accelerator handle device placement for us in this example.
     accelerator = Accelerator()
     logger.info(accelerator.state, main_process_only=False)
@@ -706,6 +707,8 @@ def main():
                     progress_bar.write(log_str)
                     if is_wandb_available():
                         wandb.log(train_logs)
+
+            sys.stdout.flush()
 
             # save model every `args.saving_steps` steps
             if (step + 1) % (args.gradient_accumulation_steps * args.saving_steps) == 0:
