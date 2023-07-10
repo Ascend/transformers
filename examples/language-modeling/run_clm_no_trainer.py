@@ -33,6 +33,9 @@ from pathlib import Path
 
 import datasets
 import torch
+import torch_npu
+
+from optimum.ascend import transfor_to_npu
 from accelerate import Accelerator, DistributedType
 from accelerate.logging import get_logger
 from accelerate.utils import set_seed
@@ -52,9 +55,11 @@ from transformers import (
     default_data_collator,
     get_scheduler,
 )
-from transformers.utils import check_min_version, get_full_repo_name, send_example_telemetry
+from transformers.utils import check_min_version, get_full_repo_name
 from transformers.utils.versions import require_version
 
+
+torch_npu.npu.set_compile_mode(jit_compile=False)
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.30.0")
@@ -250,10 +255,6 @@ def parse_args():
 def main():
     args = parse_args()
 
-    # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
-    # information sent is the one passed as arguments along with your Python/PyTorch versions.
-    send_example_telemetry("run_clm_no_trainer", args)
-
     # Initialize the accelerator. We will let the accelerator handle device placement for us in this example.
     # If we're using tracking, we also need to initialize it here and it will by default pick up all supported trackers
     # in the environment
@@ -434,7 +435,8 @@ def main():
         # Concatenate all texts.
         concatenated_examples = {k: list(chain(*examples[k])) for k in examples.keys()}
         total_length = len(concatenated_examples[list(examples.keys())[0]])
-        # We drop the small remainder, and if the total_length < block_size  we exclude this batch and return an empty dict.
+        # We drop the small remainder, and if the total_length < block_size  we exclude this batch and return an
+        # empty dict.
         # We could add padding if the model supported it instead of this drop, you can customize this part to your needs.
         total_length = (total_length // block_size) * block_size
         # Split by chunks of max_len.
