@@ -1,34 +1,35 @@
-<!---
-Copyright 2022 The HuggingFace Team. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 # VisionTextDualEncoder and CLIP model training examples
 
-The following example showcases how to train a CLIP-like vision-text dual encoder model
-using a pre-trained vision and text encoder.
+本项目展示如何在Ascend NPU下运行Tansformers的[contrastive-image-text](https://github.com/huggingface/transformers/tree/v4.30.2/examples/pytorch/contrastive-image-text)任务。
 
-Such a model can be used for natural language image search and potentially zero-shot image classification.
-The model is inspired by [CLIP](https://openai.com/blog/clip/), introduced by Alec Radford et al.
-The idea is to train a vision encoder and a text encoder jointly to project the representation of images and their
-captions into the same embedding space, such that the caption embeddings are located near the embeddings
-of the images they describe.
+## 准备训练环境
+### 准备环境
+- 环境准备指导。
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  当前基于 PyTorch 1.11 完成测试。
+- 安装依赖
+  
+  1、使用 NPU 设备源码安装适配昇腾的 accelerate
+  ```text
+  git clone -b accelerate-v0.21.0 https://gitee.com/ascend/transformers.git accelerate
+  cd accelerate
+  pip3 install -e .
+  ```
+  2、使用 NPU 设备源码安装 Transformers 插件
+  ```text
+  git clone -b v4.30.2 https://gitee.com/ascend/transformers.git
+  cd transformers
+  pip3 install -e .
+  ```
+  > 注：该插件依赖Transformers-v4.30.2，将会自动安装该版本
 
-### Download COCO dataset (2017)
-This example uses COCO dataset (2017) through a custom dataset script, which requires users to manually download the
-COCO dataset before training.
+  3、安装contrastive-image-text任务所需依赖
+  ```text
+  pip3 install -r requirements.txt
+  ```
 
+### 准备数据集
+下载 COCO dataset(2017)
 ```bash
 mkdir data
 cd data
@@ -39,10 +40,8 @@ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
 wget http://images.cocodataset.org/annotations/image_info_test2017.zip
 cd ..
 ```
-
-Having downloaded COCO dataset manually you should be able to load with the `ydshieh/coc_dataset_script` dataset loading script:
-
-```py
+使用[coc_dataset_script](https://huggingface.co/datasets/ydshieh/coco_dataset_script)处理下载的数据集：
+```python
 import os
 import datasets
 
@@ -50,10 +49,10 @@ COCO_DIR = os.path.join(os.getcwd(), "data")
 ds = datasets.load_dataset("ydshieh/coco_dataset_script", "2017", data_dir=COCO_DIR)
 ```
 
-### Create a model from a vision encoder model and a text encoder model
-Next, we create a [VisionTextDualEncoderModel](https://huggingface.co/docs/transformers/model_doc/vision-text-dual-encoder#visiontextdualencoder).
-The `VisionTextDualEncoderModel` class lets you load any vision and text encoder model to create a dual encoder.
-Here is an example of how to load the model using pre-trained vision and text models.
+### 使用vision encoder 模型和text encoder模型生成所需模型
+生成 [VisionTextDualEncoderModel](https://huggingface.co/docs/transformers/model_doc/vision-text-dual-encoder#visiontextdualencoder).
+
+这里给出如何加载模型权重（使用预训练的视觉和文本模型）的示例：
 
 ```python3
 from transformers import (
@@ -76,27 +75,20 @@ model.save_pretrained("clip-roberta")
 processor.save_pretrained("clip-roberta")
 ```
 
-This loads both the text and vision encoders using pre-trained weights, the projection layers are randomly
-initialized except for CLIP's vision model. If you use CLIP to initialize the vision model then the vision projection weights are also
-loaded using the pre-trained weights.
+## 开始训练
+执行 `run_clip.sh`
 
-### Train the model
-Finally, we can run the example script to train the model:
+## 训练结果
+| Architecture | Pretrained Model    | Script                                                                                                        | supported | 
+|--------------|---------------------|---------------------------------------------------------------------------------------------------------------|-----------|
+| clip         | manually-generation | [run_clip.sh](https://gitee.com/ascend/transformers/blob/v4.30.2/examples/contrastive-image-text/run_clip.sh) | ✔️        |
 
-```bash
-python examples/pytorch/contrastive-image-text/run_clip.py \
-    --output_dir ./clip-roberta-finetuned \
-    --model_name_or_path ./clip-roberta \
-    --data_dir $PWD/data \
-    --dataset_name ydshieh/coco_dataset_script \
-    --dataset_config_name=2017 \
-    --image_column image_path \
-    --caption_column caption \
-    --remove_unused_columns=False \
-    --do_train  --do_eval \
-    --per_device_train_batch_size="64" \
-    --per_device_eval_batch_size="64" \
-    --learning_rate="5e-5" --warmup_steps="0" --weight_decay 0.1 \
-    --overwrite_output_dir \
-    --push_to_hub
-```
+
+## 版本说明
+### 变更
+- 2023.06.26：Transformers版本更新到v4.30.2
+- 2023.03.05: 首次发布
+
+### FAQ
+- `RuntimeError: No such operator image::read_file`
+  > 请通过源码编译安装 torchvision
