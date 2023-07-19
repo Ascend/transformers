@@ -1,2 +1,0 @@
-from .fnet import npu_fnetbasicfouriertransform_forward
-from .wav2vec2 import npu_wav2vec2forpretraining_forward
