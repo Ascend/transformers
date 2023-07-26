@@ -24,6 +24,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Optional
 
+import torch_npu
 import datasets
 import evaluate
 import nltk  # Here to have a nice missing dependency error message early on
