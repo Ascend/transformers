@@ -21,6 +21,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Optional
 
+import torch_npu
 import evaluate
 import numpy as np
 import torch
