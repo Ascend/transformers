@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from random import randint
 from typing import Optional
 
+import torch_npu
 import datasets
 import evaluate
 import numpy as np
