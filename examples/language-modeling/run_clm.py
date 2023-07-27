@@ -29,6 +29,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import Optional
 
+import torch_npu
 import datasets
 import evaluate
 import torch
