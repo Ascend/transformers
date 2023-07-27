@@ -30,6 +30,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
+import torch_npu
 from datasets import load_dataset
 from PIL import Image
 from torchvision.io import ImageReadMode, read_image
