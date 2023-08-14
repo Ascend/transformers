@@ -21,14 +21,16 @@ fi
 # 启动训练脚本
 start_time=$(date +%s)
 nohup python3 -m torch.distributed.run --nproc_per_node 8 run_summarization.py \
-  --model_name_or_path t5-small \
+    --model_name_or_path t5-small \
     --do_train \
     --do_eval \
     --dataset_name cnn_dailymail \
     --dataset_config "3.0.0" \
     --source_prefix "summarize: " \
-    --per_device_train_batch_size=4 \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size=16 \
     --per_device_eval_batch_size=4 \
+    --seed 1337 \
     --overwrite_output_dir \
     --predict_with_generate \
     --output_dir ./output > ${scripts_path_dir}/output/run_t5.log 2>&1 &
