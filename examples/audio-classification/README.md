@@ -6,7 +6,7 @@
 ### 准备环境
 - 环境准备指导。
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-  当前基于 PyTorch 2.0.1 完成测试。
+  当前基于 PyTorch 2.1.0 完成测试。
 - 安装依赖
   
   1、使用 NPU 设备源码安装Huggingface的Github仓的 accelerate
@@ -28,7 +28,9 @@
   ```
 
 ### 准备数据集
-audio-classification示例使用的数据集由Hugging Face提供的接口自动下载无需额外准备
+audio-classification示例使用的数据集common_language下载地址：
+https://huggingface.co/datasets/common_language
+注意data文件夹也需要下载，与common_language.py共同放在common_language文件夹中，并把common_language文件夹置于`run_audio_classification.py`同级目录下。
 
 ### 准备预训练权重
 预训练权重类路径:https://huggingface.co/models
@@ -51,7 +53,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture  | Pretrained Model                                                                                       | Script                                                                                                                            | Device | Performance(8-cards) | Accuracy |
 |---------------|--------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|--------|----------------------|----------|
-| wav2vec2-base | [wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base)                                         | [run_wav2vec2.sh](https://gitee.com/ascend/transformers/tree/develop/examples/audio-classification/scripts/run_wav2vec2.sh)       | 910B1  | 715                  | 0.6371   |
+| wav2vec2-base | [wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base)                                         | [run_wav2vec2.sh](https://gitee.com/ascend/transformers/tree/develop/examples/audio-classification/scripts/run_wav2vec2.sh)       | 910B1  | 107                  | 0.7989   |
 
 
 
