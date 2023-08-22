@@ -19,6 +19,7 @@
 - [accelerate](https://github.com/huggingface/accelerate)
 
 ### 变更
+[23/08/22] 增加tests框架
 [23/07/19] 初次发布
 
 ## FQA
