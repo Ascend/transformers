@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+import torch_npu
 import datasets
 import torch
 from accelerate import Accelerator
