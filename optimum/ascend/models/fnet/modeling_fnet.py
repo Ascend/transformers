@@ -13,10 +13,11 @@
 # limitations under the License.
 
 def npu_fnetbasicfouriertransform_forward(self, hidden_states):
-    # NOTE: We do not use torch.vmap as it is not integrated into PyTorch stable versions.
-    # Interested users can modify the code to use vmap from the nightly versions, getting the vmap from here:
-    # https://pytorch.org/docs/master/generated/torch.vmap.html. Note that fourier transform methods will need
-    # change accordingly.
+    """
+    Copied from FNetBasicFourierTransform: https://github.com/huggingface/transformers/blob/main/src/tranformers/models/fnet/modeling_fnet.py
+    The only difference is:
+    - `self.fourier_transform` is evaluated on cpu
+    """
 
     outputs = self.fourier_transform(hidden_states.to("cpu")).real.to(hidden_states.device)
     return (outputs,)

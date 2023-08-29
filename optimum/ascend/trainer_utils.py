@@ -22,10 +22,7 @@ from transformers.utils import is_torch_available
 
 def set_seed(seed: int):
     """
-    Helper function for reproducible behavior to set the seed in `random`, `numpy`, `torch` and/or `tf` (if installed).
-
-    Args:
-        seed (`int`): The seed to set.
+    set_seed is built on top of the tranformers trainer_utils `set_seed`
     """
     random.seed(seed)
     np.random.seed(seed)

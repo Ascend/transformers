@@ -87,11 +87,11 @@ def npu_wav2vec2forpretraining_forward(
             negative_quantized_features,
             transformer_features,
             self.config.contrastive_logits_temperature,
-        )
+        ).to("cpu")
 
         # 5. if a negative vector is identical to the positive (i.e. when codebook utilization is low),
         # its cosine similarity will be masked
-        neg_is_pos = (quantized_features == negative_quantized_features).all(-1)
+        neg_is_pos = (quantized_features == negative_quantized_features).all(-1).to("cpu")
 
         if neg_is_pos.any():
             logits[1:][neg_is_pos] = float("-inf")
