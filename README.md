@@ -7,6 +7,8 @@
 
 ## 更新日志
 
+[23/09/05] :fire:  [transformers](https://github.com/huggingface/transformers) 支持 Ascend NPU 使用 apex 进行混合精度训练
+
 [23/08/23] :tada: 现在 `transformers>=4.32.0` `accelearte>=0.22.0`、`peft>=0.5.0`、`trl>=0.5.0`原生支持 Ascend NPU！通过 `pip install` 即可安装体验
 
 [23/08/11] :sparkles:  [trl](https://github.com/huggingface/trl) 原生支持 Ascend NPU，请源码安装体验
@@ -27,75 +29,102 @@
 
 当前  [transformers](https://github.com/huggingface/transformers)  训练流程已原生支持 Ascend NPU，这里以参考示例中 [text-classification](https://github.com/huggingface/transformers/tree/main/examples/pytorch/text-classification) 任务为例说明如何在 Ascend NPU 微调 bert 模型。
 
-1.  请参考《[Pytorch框架训练环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fptes)》准备环境，要求 python>=3.8, PyTorch >= 1.9
+#### 环境准备
 
-2.  安装 transformers
+1. 请参考《[Pytorch框架训练环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fptes)》准备环境，要求 python>=3.8, PyTorch >= 1.9
+
+2. 安装 transformers
 
    ```
    pip3 install -U transformers
    ```
 
-3. 获取[text-classification](https://github.com/huggingface/transformers/tree/main/examples/pytorch/text-classification)训练脚本并安装相关依赖
+#### 单卡训练
 
-   ```
-   git clone https://github.com/huggingface/transformers.git
-   cd examples/pytorch/text-classification
-   pip install -r requirements.txt
-   ```
+获取[text-classification](https://github.com/huggingface/transformers/tree/main/examples/pytorch/text-classification)训练脚本并安装相关依赖
 
-4. 执行单卡训练
+```
+git clone https://github.com/huggingface/transformers.git
+cd examples/pytorch/text-classification
+pip install -r requirements.txt
+```
 
-   参考 [text-classification](https://github.com/huggingface/transformers/tree/main/examples/pytorch/text-classification) README，执行：
+执行单卡训练
 
-   ```
-   export TASK_NAME=mrpc
-   
-   python run_glue.py \
-     --model_name_or_path bert-base-cased \
-     --task_name $TASK_NAME \
-     --do_train \
-     --do_eval \
-     --max_seq_length 128 \
-     --per_device_train_batch_size 32 \
-     --learning_rate 2e-5 \
-     --num_train_epochs 3 \
-     --output_dir /tmp/$TASK_NAME/
-   ```
+参考 [text-classification](https://github.com/huggingface/transformers/tree/main/examples/pytorch/text-classification) README，执行：
 
-   如果希望使用混合精度，请传入训练参数 `--fp16` 
+```bash
+export TASK_NAME=mrpc
 
-   ```
-   export TASK_NAME=mrpc
-   
-   python run_glue.py \
-     --model_name_or_path bert-base-cased \
-     --task_name $TASK_NAME \
-     --do_train \
-     --do_eval \
-     --max_seq_length 128 \
-     --per_device_train_batch_size 32 \
-     --learning_rate 2e-5 \
-     --num_train_epochs 3 \
-     --fp16 \
-     --output_dir /tmp/$TASK_NAME/
-   ```
+python run_glue.py \
+  --model_name_or_path bert-base-cased \
+  --task_name $TASK_NAME \
+  --do_train \
+  --do_eval \
+  --max_seq_length 128 \
+  --per_device_train_batch_size 32 \
+  --learning_rate 2e-5 \
+  --num_train_epochs 3 \
+  --output_dir /tmp/$TASK_NAME/
+```
 
-5. 执行多卡训练
+#### 多卡训练
 
-   ```
-   export TASK_NAME=mrpc
-   
-   python -m torch.distributed.launch --nproc_per_node=8 run_glue.py \
-     --model_name_or_path bert-base-cased \
-     --task_name $TASK_NAME \
-     --do_train \
-     --do_eval \
-     --max_seq_length 128 \
-     --per_device_train_batch_size 32 \
-     --learning_rate 2e-5 \
-     --num_train_epochs 3 \
-     --output_dir /tmp/$TASK_NAME/
-   ```
+执行多卡训练
+
+```bash
+export TASK_NAME=mrpc
+
+python -m torch.distributed.launch --nproc_per_node=8 run_glue.py \
+  --model_name_or_path bert-base-cased \
+  --task_name $TASK_NAME \
+  --do_train \
+  --do_eval \
+  --max_seq_length 128 \
+  --per_device_train_batch_size 32 \
+  --learning_rate 2e-5 \
+  --num_train_epochs 3 \
+  --output_dir /tmp/$TASK_NAME/
+```
+
+#### 混合精度训练
+
+如果希望使用混合精度，请传入训练参数 `--fp16` 
+
+```bash
+export TASK_NAME=mrpc
+
+python run_glue.py \
+  --model_name_or_path bert-base-cased \
+  --task_name $TASK_NAME \
+  --do_train \
+  --do_eval \
+  --max_seq_length 128 \
+  --per_device_train_batch_size 32 \
+  --learning_rate 2e-5 \
+  --num_train_epochs 3 \
+  --fp16 \
+  --output_dir /tmp/$TASK_NAME/
+```
+
+如果希望使用apex进行混合精度训练，请先确保安装支持 Ascend NPU 的 apex 包，然后传入 `--fp16` 和 `--half_precision_backend apex`
+
+```bash
+export TASK_NAME=mrpc
+
+python run_glue.py \
+  --model_name_or_path bert-base-cased \
+  --task_name $TASK_NAME \
+  --do_train \
+  --do_eval \
+  --max_seq_length 128 \
+  --per_device_train_batch_size 32 \
+  --learning_rate 2e-5 \
+  --num_train_epochs 3 \
+  --fp16 \
+  --half_precision_backend apex \
+  --output_dir /tmp/$TASK_NAME/
+```
 
 ### 支持的特性
 
@@ -266,7 +295,7 @@ accelerate launch examples/nlp_example.py
 
 ## FQA
 
-- 使用`transformers`、`accelerate`、`trl`等套件时仅需在您的脚本入口处添加 `import torch, torch_npu`不要使用`from torch_npu.contrib import transfer_to_npu`
+- 使用`transformers`、`accelerate`、`trl`等套件时仅需在您的脚本入口处添加 `import torch, torch_npu` 请勿使用 `from torch_npu.contrib import transfer_to_npu`
   ```python
    import torch
    ipmort torch_npu
