@@ -31,7 +31,7 @@ nohup python3 -m torch.distributed.run --nproc_per_node 8 run_mae.py \
   --base_learning_rate 1.5e-4 \
   --lr_scheduler_type cosine \
   --weight_decay 0.05 \
-  --num_train_epochs 800 \
+  --num_train_epochs 3 \
   --warmup_ratio 0.05 \
   --per_device_train_batch_size 8 \
   --per_device_eval_batch_size 8 \

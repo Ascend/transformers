@@ -28,7 +28,7 @@ nohup python3 -m torch.distributed.run --nproc_per_node 8 run_mim.py \
   --do_eval \
   --learning_rate 2e-5 \
   --weight_decay 0.05 \
-  --num_train_epochs 100 \
+  --num_train_epochs 3 \
   --per_device_train_batch_size 8 \
   --per_device_eval_batch_size 8 \
   --logging_strategy steps \
