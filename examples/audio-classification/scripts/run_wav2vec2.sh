@@ -39,9 +39,7 @@ nohup python3 -m torch.distributed.run --nproc_per_node 8 run_audio_classificati
     --dataloader_num_workers 8 \
     --logging_strategy steps \
     --logging_steps 10 \
-    --evaluation_strategy epoch \
     --save_strategy epoch \
-    --load_best_model_at_end True \
     --metric_for_best_model accuracy \
     --save_total_limit 3 \
     --seed 0 \
