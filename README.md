@@ -1,4 +1,4 @@
-# Transformers
+# Hugging Face
 ## 简介
 :tada: Hugging Face 核心套件  [transformers](https://github.com/huggingface/transformers) 、  [accelerate](https://github.com/huggingface/accelerate) 、 [peft](https://github.com/huggingface/peft) 、  [trl](https://github.com/huggingface/trl)  已原生支持 Ascend NPU，相关功能陆续补齐中。
 
@@ -6,6 +6,8 @@
 
 
 ## 更新日志
+
+[23/09/13] :fire:  accelerate 支持 Ascend NPU 使用 BF16 格式进行混合精度训练
 
 [23/09/05] :fire:  [transformers](https://github.com/huggingface/transformers) 支持 Ascend NPU 使用 apex 进行混合精度训练
 
@@ -266,7 +268,7 @@ accelerate launch examples/nlp_example.py
 
 - [x] multi-NPU on one node (machine)
 
-- [x] FP16 mixed precision
+- [x] FP16/BF16 mixed precision
 
 - [x] PyTorch Fully Sharded Data Parallel (FSDP) support (Partially support,Experimental)
 
