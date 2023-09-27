@@ -25,7 +25,7 @@ nohup python3 -m torch.distributed.run --nproc_per_node 8 run_wav2vec2_pretraini
     --dataset_config_names clean clean \
     --dataset_split_names validation test \
     --model_name_or_path="patrickvonplaten/wav2vec2-base-v2" \
-    --max_train_steps="20000" \
+    --max_train_steps="150" \
     --num_warmup_steps="32000" \
     --gradient_accumulation_steps="8" \
     --learning_rate="0.005" \
