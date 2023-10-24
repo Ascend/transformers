@@ -44,7 +44,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture    | Pretrained Model                                                                                        | Script                                                                                                         | Device | Performance(8-cards) | Accuracy |
 |-----------------|---------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|--------|----------------------|----------|
-| bert            | [bert-base-cased](https://huggingface.co/bert-base-cased)                                               | [run_bert.sh](https://gitee.com/ascend/transformers/tree/develop/examples/multiple-choice/scripts/run_bert.sh) | 910B1  | 453                  | 0.7987   |
+| bert            | [bert-base-cased](https://huggingface.co/bert-base-cased)                                               | [run_bert.sh](https://gitee.com/ascend/transformers/tree/develop/examples/multiple-choice/scripts/run_bert.sh) | NPU  | 453                  | 0.7987   |
 
 
 

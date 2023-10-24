@@ -54,7 +54,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture | Pretrained Model                                          | Script                                                                                                            | Device | Performance(8-cards) | Exact_match | F1       | Performance(8-cards)(竞品A) |  Exact_match(竞品A)  | F1（竞品A）| 
 |--------------|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|--------|----------------------|-------------|----------|---------------------------| -------------------|--------|
-| bert         | [bert-base-cased](https://huggingface.co/bert-base-cased) | [run_bert.sh](https://gitee.com/ascend/transformers/tree/develop/examples/question-answering/scripts/run_bert.sh) | 910B1  | 429                  | 0.7957      | 0.8660   | 306                       |  0.7961            | 0.8736 |
+| bert         | [bert-base-cased](https://huggingface.co/bert-base-cased) | [run_bert.sh](https://gitee.com/ascend/transformers/tree/develop/examples/question-answering/scripts/run_bert.sh) | NPU  | 429                  | 0.7957      | 0.8660   | 306                       |  0.7961            | 0.8736 |
 
 
 

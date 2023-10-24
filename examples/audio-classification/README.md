@@ -53,7 +53,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture  | Pretrained Model                                                                                       | Script                                                                                                                            | Device | Performance(8-cards) | Accuracy |
 |---------------|--------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|--------|----------------------|----------|
-| wav2vec2-base | [wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base)                                         | [run_wav2vec2.sh](https://gitee.com/ascend/transformers/tree/develop/examples/audio-classification/scripts/run_wav2vec2.sh)       | 910B1  | 107                  | 0.7989   |
+| wav2vec2-base | [wav2vec2-base](https://huggingface.co/facebook/wav2vec2-base)                                         | [run_wav2vec2.sh](https://gitee.com/ascend/transformers/tree/develop/examples/audio-classification/scripts/run_wav2vec2.sh)       | NPU    | 107                  | 0.7989   |
 
 
 

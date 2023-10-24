@@ -93,7 +93,7 @@ bash ./scripts/run_clip.sh
 
 ## 训练结果
 
-| Architecture |           Pretrained Model            |   Script    | Device  | Performance(8-cards) | Train Loss | Pretraining Times |
-|:------------:|:-------------------------------------:|:-----------:|:-------:|:--------------------:|:----------:|:-----------------:|
-|     clip     | clip-vit-base-patch32 —— roberta-base | run_clip.sh |  910B1  |        415.05        |   0.3576   |      47mins       |
+| Architecture |           Pretrained Model            |   Script    | Device | Performance(8-cards) | Train Loss | Pretraining Times |
+|:------------:|:-------------------------------------:|:-----------:|:------:|:--------------------:|:----------:|:-----------------:|
+|     clip     | clip-vit-base-patch32 —— roberta-base | run_clip.sh |  NPU   |        415.05        |   0.3576   |      47mins       |
 

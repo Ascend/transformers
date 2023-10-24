@@ -47,7 +47,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture | Pretrained Model                                                                 | Script                                                                                                                    | Device | Performance(8-cards) | Wer    |
 |--------------|----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|--------|----------------------|--------|
-| wav2vec2     | [wav2vec2-large-xlsr-53](https://huggingface.co/facebook/wav2vec2-large-xlsr-53) | [run_wav2vec2.sh](https://gitee.com/ascend/transformers/tree/develop/examples/speech-recognition/scripts/run_wav2vec2.sh) | 910B   | 7                    | 0.6842 |
+| wav2vec2     | [wav2vec2-large-xlsr-53](https://huggingface.co/facebook/wav2vec2-large-xlsr-53) | [run_wav2vec2.sh](https://gitee.com/ascend/transformers/tree/develop/examples/speech-recognition/scripts/run_wav2vec2.sh) | NPU    | 7                    | 0.6842 |
 
 
 ### FAQ

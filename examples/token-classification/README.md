@@ -54,7 +54,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture | Pretrained Model                                              | Script                                                                                                            | Device | Performance(8-cards) | f1     |
 |--------------|---------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|--------|----------------------|--------|
-| bert         | [bert-base-uncased](https://huggingface.co/bert-base-uncased) | [run_ner.sh](https://gitee.com/ascend/transformers/tree/develop/examples/token-classification/scripts/run_ner.sh) | 910B1  | 187.262              | 0.9409 |
+| bert         | [bert-base-uncased](https://huggingface.co/bert-base-uncased) | [run_ner.sh](https://gitee.com/ascend/transformers/tree/develop/examples/token-classification/scripts/run_ner.sh) | NPU  | 187.262              | 0.9409 |
 
 
 

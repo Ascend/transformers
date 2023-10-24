@@ -54,7 +54,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture | Pretrained Model                                    | Script                                                                                                    | Device | Performance(8-cards) | Rouge1 | Rouge2 | RougeL | RougeLsum |
 |--------------|-----------------------------------------------------|-----------------------------------------------------------------------------------------------------------|--------|----------------------|--------|--------|--------|-----------|
-| t5           | [t5-small](https://huggingface.co/t5-small)         | [run_t5.sh](https://gitee.com/ascend/transformers/tree/develop/examples/summarization/scripts/run_t5.sh)  | 910B1  | 538                  | 0.4131 | 0.1891 | 0.2924 | 0.3849    |
+| t5           | [t5-small](https://huggingface.co/t5-small)         | [run_t5.sh](https://gitee.com/ascend/transformers/tree/develop/examples/summarization/scripts/run_t5.sh)  | NPU  | 538                  | 0.4131 | 0.1891 | 0.2924 | 0.3849    |
 
 
 

@@ -53,8 +53,8 @@ bash ./scripts/run_image_classification.sh
 ## 训练结果
 
 | Architecture | Pretrained Model           | Script                      | Device | Performance(8-cards) | Accuracy |
-| ------------ | -------------------------- | --------------------------- | ------ | -------------------- | -------- |
-| ViT          | vit-base-patch16-224-in21k | run_image_classification.sh | 910B1  | 69.469               | 0.985    |
+| ------------ | -------------------------- | --------------------------- |--------| -------------------- | -------- |
+| ViT          | vit-base-patch16-224-in21k | run_image_classification.sh | NPU    | 69.469               | 0.985    |
 
 ### FAQ
 

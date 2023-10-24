@@ -54,7 +54,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture | Pretrained Model                                | Script                                                                                                                         | Device | Performance(8-cards) | Mean_iou |
 |--------------|-------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|--------|----------------------|----------|
-| segformer    | [mit-b](https://huggingface.co/nvidia/mit-b0)   | [run_segformer.sh](https://gitee.com/ascend/transformers/tree/develop/examples/semantic-segmentation/scripts/run_segformer.sh) | 910B1  | 44.612               | 0.3031   |
+| segformer    | [mit-b](https://huggingface.co/nvidia/mit-b0)   | [run_segformer.sh](https://gitee.com/ascend/transformers/tree/develop/examples/semantic-segmentation/scripts/run_segformer.sh) | NPU  | 44.612               | 0.3031   |
 
 
 
