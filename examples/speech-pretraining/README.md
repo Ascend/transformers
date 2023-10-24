@@ -42,9 +42,9 @@ bash ./scripts/run_XXX.sh
 
 ## 训练结果
 
-| Architecture | Pretrained Model                                                                                          | Script                                                                                                                            | Device    | Val_loss  |
-|--------------|-----------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|-----------|-----------|
-| wav2vec2     | [wav2vec2-base-v2](https://huggingface.co/patrickvonplaten/wav2vec2-base-v2)                              | [run_wav2vec2.sh](https://gitee.com/ascend/transformers/tree/develop/examples/speech-pretraining/scripts/run_wav2vec2.sh)         | 910B1     | 4.366e+00 |
+| Architecture | Pretrained Model                                                                                          | Script                                                                                                                            | Device | Val_loss  |
+|--------------|-----------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|--------|-----------|
+| wav2vec2     | [wav2vec2-base-v2](https://huggingface.co/patrickvonplaten/wav2vec2-base-v2)                              | [run_wav2vec2.sh](https://gitee.com/ascend/transformers/tree/develop/examples/speech-pretraining/scripts/run_wav2vec2.sh)         | NPU    | 4.366e+00 |
 
 
 

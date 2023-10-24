@@ -51,7 +51,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture | Pretrained Model                    | Script                                                                                                           | Device| Performance(8-cards) | Accuracy |
 |--------------|-------------------------------------|------------------------------------------------------------------------------------------------------------------|-------|----------------------|----------|
-| gpt2         | [gpt2](https://huggingface.co/gpt2) | [run_bert.sh](https://gitee.com/ascend/transformers/tree/develop/examples/language-modeling/scripts/run_gpt2.sh) | 910B1 | 96                   | 0.3987   |
+| gpt2         | [gpt2](https://huggingface.co/gpt2) | [run_bert.sh](https://gitee.com/ascend/transformers/tree/develop/examples/language-modeling/scripts/run_gpt2.sh) | NPU | 96                   | 0.3987   |
 
 
 

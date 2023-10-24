@@ -60,8 +60,8 @@ bash ./scripts/run_mae.sh
 
 ## 训练结果
 
-| Architecture  | Pretrained Model |    Script    | Device  | Performance(8-cards)  |  Loss   | Pretraining Times  |
-|:-------------:|:----------------:|:------------:|:-------:|:---------------------:|:-------:|:------------------:|
-|      MAE      |       vit        |  run_mae.sh  |  910B1  |        127.442        | 0.2721  |       50mins       |
-|    SimMIM     |       vit        |  run_mim.sh  |  910B1  |        167.946        | 0.1278  |       37mins       |
+| Architecture  | Pretrained Model |    Script    | Device | Performance(8-cards)  |  Loss   | Pretraining Times  |
+|:-------------:|:----------------:|:------------:|:------:|:---------------------:|:-------:|:------------------:|
+|      MAE      |       vit        |  run_mae.sh  |  NPU   |        127.442        | 0.2721  |       50mins       |
+|    SimMIM     |       vit        |  run_mim.sh  |  NPU   |        167.946        | 0.1278  |       37mins       |
 

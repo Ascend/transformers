@@ -51,7 +51,7 @@ bash ./scripts/run_XXX.sh
 
 | Architecture | Pretrained Model                            | Script                                                                                                 | Device | Performance(8-cards)   | Bleu   |
 |-------------|---------------------------------------------|--------------------------------------------------------------------------------------------------------|--------|------------------------|--------|
-| t5          | [t5-small](https://huggingface.co/t5-small) | [run_t5.sh](https://gitee.com/ascend/transformers/tree/develop/examples/translation/scripts/run_t5.sh) | 910B1  | 791                    | 0.2629 |
+| t5          | [t5-small](https://huggingface.co/t5-small) | [run_t5.sh](https://gitee.com/ascend/transformers/tree/develop/examples/translation/scripts/run_t5.sh) | NPU  | 791                    | 0.2629 |
 
 
 
