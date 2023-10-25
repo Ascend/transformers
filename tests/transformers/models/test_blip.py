@@ -45,21 +45,17 @@ class BlipModelIntegrationTest(unittest.TestCase):
         processor = BlipProcessor.from_pretrained(MODEL_NAME_OR_PATH)
         image = prepare_img()
 
-        # image only
         inputs = processor(images=image, return_tensors="pt").to(torch_device)
 
         predictions = model.generate(**inputs)
 
-        # Test output
         self.assertEqual(predictions[0].tolist(), [30522, 1037, 2450, 3564, 2006, 1996, 3509, 2007, 2014, 3899, 102])
 
-        # image and context
         context = ["a picture of"]
         inputs = processor(images=image, text=context, return_tensors="pt").to(torch_device)
 
         predictions = model.generate(**inputs)
 
-        # Test output
         self.assertEqual(
             predictions[0].tolist(),
             [30522, 1037, 3861, 1997, 1037, 2450, 1998, 2014, 3899, 2006, 1996, 3509, 102],

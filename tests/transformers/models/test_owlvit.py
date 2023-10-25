@@ -13,39 +13,43 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Testing suite for the PyTorch Chinese_clip model. """
+""" Testing suite for the PyTorch Owlvit model. """
 
 import unittest
-import requests
 
-from transformers.testing_utils import is_torch_available, is_vision_available, torch_device
+from transformers.testing_utils import require_torch, require_vision, torch_device
+from transformers.utils import is_torch_available, is_vision_available, cached_property
 
 if is_torch_available():
     import torch
-
-    from transformers import (
-        ChineseCLIPModel, ChineseCLIPProcessor
-    )
+    from transformers import OwlViTModel
 
 if is_vision_available():
     from PIL import Image
+    from transformers import OwlViTProcessor
 
-MODEL_NAME_OR_PATH = "OFA-Sys/chinese-clip-vit-base-patch16"
+MODEL_NAME_OR_PATH = "google/owlvit-base-patch32"
 
 def prepare_img():
-    url = "https://clip-cn-beijing.oss-cn-beijing.aliyuncs.com/pokemon.jpeg"
-    im = Image.open(requests.get(url, stream=True).raw)
-    return im
+    image = Image.open("000000039769.png")
+    return image
 
-class ChineseCLIPModelIntegrationTest(unittest.TestCase):
+@require_vision
+@require_torch
+class OwlViTModelIntegrationTest(unittest.TestCase):
     def test_inference(self):
-        model = ChineseCLIPModel.from_pretrained(MODEL_NAME_OR_PATH).to(torch_device)
-        processor = ChineseCLIPProcessor.from_pretrained(MODEL_NAME_OR_PATH)
+        model = OwlViTModel.from_pretrained(MODEL_NAME_OR_PATH).to(torch_device)
+        processor = OwlViTProcessor.from_pretrained(MODEL_NAME_OR_PATH)
 
         image = prepare_img()
-        inputs = processor(text=["杰尼龟", "妙蛙种子", "小火龙", "皮卡丘"], images=image, padding=True, return_tensors="pt").to(
-            torch_device
-        )
+        inputs = processor(
+            text=[["a photo of a cat", "a photo of a dog"]],
+            images=image,
+            max_length=16,
+            padding="max_length",
+            return_tensors="pt",
+        ).to(torch_device)
+
 
         with torch.no_grad():
             outputs = model(**inputs)
@@ -58,11 +62,8 @@ class ChineseCLIPModelIntegrationTest(unittest.TestCase):
             outputs.logits_per_text.shape,
             torch.Size((inputs.input_ids.shape[0], inputs.pixel_values.shape[0])),
         )
-
-        probs = outputs.logits_per_image.softmax(dim=1)
-        expected_probs = torch.tensor([[1.2686e-03, 5.4499e-02, 6.7968e-04, 9.4355e-01]], device=torch_device)
-
-        self.assertTrue(torch.allclose(probs, expected_probs, atol=5e-3))
+        expected_logits = torch.tensor([[3.4613, 0.9403]], device=torch_device)
+        self.assertTrue(torch.allclose(outputs.logits_per_image, expected_logits, atol=1e-3))
 
 if __name__=='__main__':
-    unittest.main(argv=['', 'ChineseCLIPModelIntegrationTest.test_inference'])
+    unittest.main(argv=['', 'OwlViTModelIntegrationTest.test_inference'])

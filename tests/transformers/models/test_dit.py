@@ -47,7 +47,6 @@ class DiTIntegrationTest(unittest.TestCase):
 
         inputs = image_processor(image, return_tensors="pt").to(torch_device)
 
-        # forward pass
         with torch.no_grad():
             outputs = model(**inputs)
             logits = outputs.logits

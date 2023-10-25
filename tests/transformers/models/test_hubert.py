@@ -33,7 +33,7 @@ class HubertModelIntegrationTest(unittest.TestCase):
         from datasets import load_dataset
 
         ds = load_dataset(DATASET_NAME, "clean", split="validation")
-        # automatic decoding with librispeech
+
         speech_samples = ds.sort("id").filter(
             lambda x: x["id"] in [f"1272-141231-000{i}" for i in range(num_samples)]
         )[:num_samples]["audio"]

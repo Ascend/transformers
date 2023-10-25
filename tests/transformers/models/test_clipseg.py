@@ -50,11 +50,9 @@ class CLIPSegModelIntegrationTest(unittest.TestCase):
         texts = ["a cat", "a remote", "a blanket"]
         inputs = processor(text=texts, images=[image] * len(texts), padding=True, return_tensors="pt").to(torch_device)
 
-        # forward pass
         with torch.no_grad():
             outputs = model(**inputs)
 
-        # verify the predicted masks
         self.assertEqual(
             outputs.logits.shape,
             torch.Size((3, 352, 352)),
@@ -64,7 +62,6 @@ class CLIPSegModelIntegrationTest(unittest.TestCase):
         ).to(torch_device)
         self.assertTrue(torch.allclose(outputs.logits[0, :3, :3], expected_masks_slice, atol=1e-3))
 
-        # verify conditional and pooled output
         expected_conditional = torch.tensor([0.5601, -0.0314, 0.1980]).to(torch_device)
         expected_pooled_output = torch.tensor([0.5036, -0.2681, -0.2644]).to(torch_device)
         self.assertTrue(torch.allclose(outputs.conditional_embeddings[0, :3], expected_conditional, atol=1e-3))

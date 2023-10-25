@@ -48,11 +48,11 @@ class GroupViTModelIntegrationTest(unittest.TestCase):
             text=["a photo of a cat", "a photo of a dog"], images=image, padding=True, return_tensors="pt"
         )
 
-        # forward pass
+
         with torch.no_grad():
             outputs = model(**inputs)
 
-        # verify the logits
+
         self.assertEqual(
             outputs.logits_per_image.shape,
             torch.Size((inputs.pixel_values.shape[0], inputs.input_ids.shape[0])),

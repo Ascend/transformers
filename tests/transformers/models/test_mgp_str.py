@@ -45,11 +45,11 @@ class MgpstrModelIntegrationTest(unittest.TestCase):
         image = prepare_img()
         inputs = processor(images=image, return_tensors="pt").pixel_values.to(torch_device)
 
-        # forward pass
+
         with torch.no_grad():
             outputs = model(inputs)
 
-        # verify the logits
+
         self.assertEqual(outputs.logits[0].shape, torch.Size((1, 27, 38)))
 
         out_strs = processor.batch_decode(outputs.logits)

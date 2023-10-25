@@ -44,11 +44,9 @@ class DPTModelIntegrationTest(unittest.TestCase):
         image = prepare_img()
         inputs = image_processor(images=image, return_tensors="pt").to(torch_device)
 
-        # forward pass
         with torch.no_grad():
             outputs = model(**inputs)
 
-        # verify the logits
         expected_shape = torch.Size((1, 150, 480, 480))
         self.assertEqual(outputs.logits.shape, expected_shape)
 

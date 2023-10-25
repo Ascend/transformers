@@ -34,7 +34,7 @@ class LiltModelIntegrationTest(unittest.TestCase):
         input_ids = torch.tensor([[1, 2]], device=torch_device)
         bbox = torch.tensor([[[1, 2, 3, 4], [5, 6, 7, 8]]], device=torch_device)
 
-        # forward pass
+
         with torch.no_grad():
             outputs = model(input_ids=input_ids, bbox=bbox)
 

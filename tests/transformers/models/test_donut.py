@@ -65,7 +65,7 @@ def floats_tensor(shape, scale=1.0, rng=None, name=None):
     return torch.tensor(data=values, dtype=torch.float, device=torch_device).view(shape).contiguous()
 
 def ids_tensor(shape, vocab_size, rng=None, name=None):
-    #  Creates a random int32 tensor of the shape within the vocab size
+
     if rng is None:
         rng = global_rng
     total_dims = 1
@@ -256,7 +256,6 @@ class DonutSwinModelTest(unittest.TestCase):
             expected_num_attentions = len(self.model_tester.depths)
             self.assertEqual(len(attentions), expected_num_attentions)
 
-            # check that output_attentions also work using config
             del inputs_dict["output_attentions"]
             config.output_attentions = True
             window_size_squared = config.window_size ** 2
@@ -274,7 +273,6 @@ class DonutSwinModelTest(unittest.TestCase):
             )
             out_len = len(outputs)
 
-            # Check attention is always last and order is fine
             inputs_dict["output_attentions"] = True
             inputs_dict["output_hidden_states"] = True
             model = model_class(config)
@@ -286,7 +284,7 @@ class DonutSwinModelTest(unittest.TestCase):
             if hasattr(self.model_tester, "num_hidden_states_types"):
                 added_hidden_states = self.model_tester.num_hidden_states_types
             else:
-                # also another +1 for reshaped_hidden_states
+
                 added_hidden_states = 2
             self.assertEqual(out_len + added_hidden_states, len(outputs))
 

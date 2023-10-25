@@ -44,11 +44,9 @@ class AltCLIPModelIntegrationTest(unittest.TestCase):
         image = prepare_img()
         inputs = processor(text=["一张猫的照片", "一张狗的照片"], images=image, padding=True, return_tensors="pt").to(torch_device)
 
-        # forward pass
         with torch.no_grad():
             outputs = model(**inputs)
 
-        # verify the logits
         self.assertEqual(
             outputs.logits_per_image.shape,
             torch.Size((inputs.pixel_values.shape[0], inputs.input_ids.shape[0])),

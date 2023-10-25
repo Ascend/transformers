@@ -55,11 +55,9 @@ class EfficientFormerModelIntegrationTest(unittest.TestCase):
         image = prepare_img()
         inputs = image_processor(images=image, return_tensors="pt").to(torch_device)
 
-        # forward pass
         with torch.no_grad():
             outputs = model(**inputs)
 
-        # verify the logits
         expected_shape = (1, 1000)
         self.assertEqual(outputs.logits.shape, expected_shape)
 

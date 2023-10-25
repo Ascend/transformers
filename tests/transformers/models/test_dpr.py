@@ -36,9 +36,9 @@ class DPRModelIntegrationTest(unittest.TestCase):
 
         input_ids = torch.tensor(
             [[101, 7592, 1010, 2003, 2026, 3899, 10140, 1029, 102]], dtype=torch.long, device=torch_device
-        )  # [CLS] hello, is my dog cute? [SEP]
-        output = model(input_ids)[0]  # embedding shape = (1, 768)
-        # compare the actual values for a slice.
+        )
+        output = model(input_ids)[0]
+
         expected_slice = torch.tensor(
             [
                 [

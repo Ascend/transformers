@@ -90,7 +90,6 @@ class BrosModelIntegrationTest(unittest.TestCase):
                 return_dict=True,
             )
 
-        # verify the logits
         expected_shape = torch.Size((2, 13, 768))
         self.assertEqual(outputs.last_hidden_state.shape, expected_shape)
 

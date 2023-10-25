@@ -63,11 +63,11 @@ class MarkupLMModelIntegrationTest(unittest.TestCase):
         inputs = processor(prepare_html_string(), return_tensors="pt")
         inputs = inputs.to(torch_device)
 
-        # forward pass
+
         with torch.no_grad():
             outputs = model(**inputs)
 
-        # verify the last hidden states
+
         expected_shape = torch.Size([1, 14, 768])
         self.assertEqual(outputs.last_hidden_state.shape, expected_shape)
 

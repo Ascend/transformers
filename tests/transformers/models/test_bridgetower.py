@@ -57,16 +57,13 @@ class BridgeTowerModelIntegrationTest(unittest.TestCase):
         text = "a bunch of cats laying on a tower."
         inputs = processor(image, text, return_tensors="pt").to(torch_device)
 
-        # forward pass
         with torch.no_grad():
             outputs = model(**inputs)
 
-        # verify the logits
         expected_shape = torch.Size([1, 2])
         self.assertEqual(outputs.logits.shape, expected_shape)
         self.assertTrue(outputs.logits[0, 1].item() > outputs.logits[0, 0].item())
 
-        # verify loss
         inputs["labels"] = torch.ones(1, dtype=torch.long, device=torch_device)
         inputs = inputs.to(torch_device)
         with torch.no_grad():
