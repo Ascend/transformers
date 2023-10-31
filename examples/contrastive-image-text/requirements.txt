@@ -1,2 +1,0 @@
-torchvision>=0.6.0
-datasets>=1.8.0

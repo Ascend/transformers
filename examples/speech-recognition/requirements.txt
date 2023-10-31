@@ -1,4 +1,0 @@
-datasets >= 1.18.0
-librosa
-jiwer
-evaluate
