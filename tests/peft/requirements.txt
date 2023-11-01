@@ -1,0 +1,10 @@
+tqdm
+torch==2.1.0
+transformers
+accelerate
+datasets
+evaluate
+peft
+scikit-learn
+scipy
+
