@@ -279,22 +279,6 @@ accelerate launch examples/nlp_example.py
 - [ ] Quantization
 
 
-
-
-
-
-## PEFT
-
-施工中...
-
-
-
-## TRL
-
-施工中...
-
-
-
 ## FQA
 
 - 使用`transformers`、`accelerate`、`trl`等套件时仅需在您的脚本入口处添加 `import torch, torch_npu` 请勿使用 `from torch_npu.contrib import transfer_to_npu`
